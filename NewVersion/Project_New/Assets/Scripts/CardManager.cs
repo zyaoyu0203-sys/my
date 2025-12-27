@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using DG.Tweening;
 
 public class CardManager : MonoBehaviour
 {
@@ -8,6 +11,25 @@ public class CardManager : MonoBehaviour
 
     // 追踪所有被选中的卡牌
     private List<Card> selectedCards = new List<Card>();
+
+    [Header("Animation Settings")]
+    [SerializeField] private float cardMoveSpeed = 0.5f;
+    [SerializeField] private float cardStayDuration = 1f;
+    [SerializeField] private Vector3 centerScreenOffset = Vector3.zero;
+
+    [Header("Play Events")]
+    public UnityEvent OnPlaySuccess;              // 出牌成功
+    public UnityEvent OnPlayFailed;               // 出牌失败（牌型不符合）
+    public UnityEvent OnGoldCardWin;              // 金牌胜利
+    public UnityEvent OnBlackCardPlayAttempt;     // 尝试打出黑牌
+
+    [Header("Discard Events")]
+    public UnityEvent OnDiscardSuccess;           // 弃牌成功
+    public UnityEvent OnBlackCardDiscardAttempt;  // 尝试弃掉黑牌
+    public UnityEvent<int> OnDiscardLimitExceeded; // 预留：超过弃牌上限
+
+    [Header("Selection Events")]
+    public UnityEvent<int> OnSelectionChanged;    // 选中数量变化
 
     private void Awake()
     {
@@ -86,6 +108,205 @@ public class CardManager : MonoBehaviour
     public int GetSelectedCount()
     {
         return selectedCards.Count;
+    }
+
+    /// <summary>
+    /// 尝试打出选中的卡牌（通过按钮调用）
+    /// </summary>
+    public void AttemptPlayCards()
+    {
+        List<Card> selected = GetSelectedCards();
+
+        if (selected.Count == 0)
+        {
+            Debug.Log("没有选中任何卡牌");
+            return;
+        }
+
+        // 过滤掉空卡
+        selected = selected.Where(c => c != null && !c.IsEmpty()).ToList();
+
+        if (selected.Count == 0)
+        {
+            Debug.LogWarning("选中的卡牌都是空的");
+            return;
+        }
+
+        // 检查是否包含黑牌
+        bool hasBlackCard = selected.Any(c => c.cardData.cardType == CardType.Black);
+        if (hasBlackCard)
+        {
+            Debug.Log("选中了黑牌，无法打出！");
+            OnBlackCardPlayAttempt?.Invoke();
+            return;
+        }
+
+        // 检查金牌胜利条件（恰好3张金牌）
+        if (selected.Count == 3 && selected.All(c => c.cardData.cardType == CardType.Gold))
+        {
+            Debug.Log("金牌胜利条件达成！");
+            StartCoroutine(PlayCardsAnimation(selected, true));
+            return;
+        }
+
+        // 德扑规则判定
+        if (PokerRuleEvaluator.CanPlayCards(selected))
+        {
+            Debug.Log("牌型有效，开始打出");
+            StartCoroutine(PlayCardsAnimation(selected, false));
+        }
+        else
+        {
+            Debug.Log("牌型无效，无法打出");
+            OnPlayFailed?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// 尝试弃掉选中的卡牌（通过按钮调用）
+    /// </summary>
+    public void AttemptDiscardCards()
+    {
+        List<Card> selected = GetSelectedCards();
+
+        if (selected.Count == 0)
+        {
+            Debug.Log("没有选中任何卡牌");
+            return;
+        }
+
+        // 过滤掉空卡
+        selected = selected.Where(c => c != null && !c.IsEmpty()).ToList();
+
+        if (selected.Count == 0)
+        {
+            Debug.LogWarning("选中的卡牌都是空的");
+            return;
+        }
+
+        // 检查是否包含黑牌
+        bool hasBlackCard = selected.Any(c => c.cardData.cardType == CardType.Black);
+        if (hasBlackCard)
+        {
+            Debug.Log("选中了黑牌，无法弃掉！");
+            OnBlackCardDiscardAttempt?.Invoke();
+            return;
+        }
+
+        // 检查是否所有卡都可以弃掉
+        bool allCanDiscard = selected.All(c => c.cardData.canBeDiscarded);
+        if (!allCanDiscard)
+        {
+            Debug.LogWarning("部分卡牌无法弃掉");
+            return;
+        }
+
+        Debug.Log($"弃掉 {selected.Count} 张卡牌");
+        StartCoroutine(DiscardCardsAnimation(selected));
+    }
+
+    /// <summary>
+    /// 打出卡牌的动画协程
+    /// </summary>
+    private IEnumerator PlayCardsAnimation(List<Card> cards, bool isGoldWin)
+    {
+        // 计算屏幕中心位置（世界坐标）
+        Vector3 center = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, 10));
+        center += centerScreenOffset;
+
+        // 杀掉所有卡牌的现有动画
+        foreach (var card in cards)
+        {
+            DOTween.Kill(card.transform);
+            if (card.cardVisual != null)
+            {
+                DOTween.Kill(card.cardVisual.transform);
+            }
+        }
+
+        // 移动到中心
+        foreach (var card in cards)
+        {
+            card.transform.DOMove(center, cardMoveSpeed).SetEase(Ease.OutQuad);
+            
+            // 标记到DeckManager
+            if (DeckManager.Instance != null)
+            {
+                DeckManager.Instance.MarkAsPlayed(card.cardData);
+            }
+        }
+
+        // 如果是金牌胜利，先触发胜利事件
+        if (isGoldWin)
+        {
+            OnGoldCardWin?.Invoke();
+        }
+        else
+        {
+            OnPlaySuccess?.Invoke();
+        }
+
+        // 等待停留时间
+        yield return new WaitForSeconds(cardStayDuration);
+
+        // 清空卡牌数据（但保留slot）
+        foreach (var card in cards)
+        {
+            card.ClearCard();
+        }
+
+        // 取消所有选中
+        DeselectAllCards();
+
+        Debug.Log("打出动画完成");
+    }
+
+    /// <summary>
+    /// 弃牌的动画协程
+    /// </summary>
+    private IEnumerator DiscardCardsAnimation(List<Card> cards)
+    {
+        // 计算屏幕中心位置（世界坐标）
+        Vector3 center = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, 10));
+        center += centerScreenOffset;
+
+        // 杀掉所有卡牌的现有动画
+        foreach (var card in cards)
+        {
+            DOTween.Kill(card.transform);
+            if (card.cardVisual != null)
+            {
+                DOTween.Kill(card.cardVisual.transform);
+            }
+        }
+
+        // 移动到中心
+        foreach (var card in cards)
+        {
+            card.transform.DOMove(center, cardMoveSpeed).SetEase(Ease.OutQuad);
+
+            // 标记到DeckManager
+            if (DeckManager.Instance != null)
+            {
+                DeckManager.Instance.MarkAsDiscarded(card.cardData);
+            }
+        }
+
+        OnDiscardSuccess?.Invoke();
+
+        // 等待停留时间
+        yield return new WaitForSeconds(cardStayDuration);
+
+        // 清空卡牌数据（但保留slot）
+        foreach (var card in cards)
+        {
+            card.ClearCard();
+        }
+
+        // 取消所有选中
+        DeselectAllCards();
+
+        Debug.Log("弃牌动画完成");
     }
 
 }

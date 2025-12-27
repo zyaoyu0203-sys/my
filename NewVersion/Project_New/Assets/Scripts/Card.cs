@@ -14,6 +14,10 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private VisualCardsHandler visualHandler;
     private Vector3 offset;
 
+    [Header("Card Data")]
+    public CardData cardData;                   // 卡牌数据引用
+    [SerializeField] private Image cardImage;   // 卡面图片组件（用于显示卡牌sprite）
+
     [Header("Movement")]
     [SerializeField] private float moveSpeedLimit = 50;
 
@@ -198,6 +202,74 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     public float NormalizedPosition()
     {
         return transform.parent.CompareTag("Slot") ? ExtensionMethods.Remap((float)ParentIndex(), 0, (float)(transform.parent.parent.childCount - 1), 0, 1) : 0;
+    }
+
+    /// <summary>
+    /// 设置卡牌数据并更新视觉效果
+    /// </summary>
+    public void SetCardData(CardData data)
+    {
+        cardData = data;
+        
+        // 更新CardVisual的图片（主要显示组件）
+        if (cardVisual != null && cardVisual.cardImage != null && data != null && data.sprite != null)
+        {
+            cardVisual.cardImage.sprite = data.sprite;
+            cardVisual.cardImage.enabled = true;
+            Debug.Log($"CardVisual图片已更新: {data.cardName}");
+        }
+        else if (cardVisual == null)
+        {
+            Debug.LogWarning($"CardVisual为空！无法显示卡牌图片");
+        }
+        else if (cardVisual.cardImage == null)
+        {
+            Debug.LogError($"CardVisual.cardImage为空！请在CardVisual Prefab中设置cardImage字段");
+        }
+
+        // 如果Card本身有cardImage组件，也更新它（作为备用）
+        if (cardImage != null && data != null && data.sprite != null)
+        {
+            cardImage.sprite = data.sprite;
+            cardImage.enabled = true;
+        }
+
+        Debug.Log($"卡牌数据已设置: {(data != null ? data.cardName : "null")}");
+    }
+
+    /// <summary>
+    /// 清空卡牌数据
+    /// </summary>
+    public void ClearCard()
+    {
+        cardData = null;
+        
+        if (cardImage != null)
+        {
+            cardImage.enabled = false;
+        }
+
+        // 同时清空CardVisual的图片
+        if (cardVisual != null && cardVisual.cardImage != null)
+        {
+            cardVisual.cardImage.enabled = false;
+        }
+
+        // 取消选中状态
+        if (selected)
+        {
+            Deselect();
+        }
+
+        Debug.Log("卡牌数据已清空");
+    }
+
+    /// <summary>
+    /// 检查卡牌是否为空（无数据）
+    /// </summary>
+    public bool IsEmpty()
+    {
+        return cardData == null;
     }
 
     private void OnDestroy()

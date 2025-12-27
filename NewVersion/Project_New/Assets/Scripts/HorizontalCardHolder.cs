@@ -20,6 +20,10 @@ public class HorizontalCardHolder : MonoBehaviour
     [SerializeField] private int cardsToSpawn = 7;
     public List<Card> cards;
 
+    [Header("Deal Settings")]
+    [SerializeField] private bool dealOnStart = true;  // 游戏开始时自动发牌
+    [SerializeField] private float dealDelay = 0.1f;   // 每张牌之间的延迟
+
     bool isCrossing = false;
     [SerializeField] private bool tweenCardReturn = true;
 
@@ -55,7 +59,93 @@ public class HorizontalCardHolder : MonoBehaviour
                 if (cards[i].cardVisual != null)
                     cards[i].cardVisual.UpdateIndex(transform.childCount);
             }
+
+            // 初始化牌堆并发牌
+            if (DeckManager.Instance != null)
+            {
+                DeckManager.Instance.InitializeDeck();
+                
+                if (dealOnStart)
+                {
+                    StartCoroutine(DealInitialHand());
+                }
+            }
+            else
+            {
+                Debug.LogError("DeckManager未找到！无法发牌");
+            }
         }
+    }
+
+    /// <summary>
+    /// 初始发牌协程
+    /// </summary>
+    private IEnumerator DealInitialHand()
+    {
+        Debug.Log("开始初始发牌...");
+        
+        for (int i = 0; i < cards.Count; i++)
+        {
+            if (cards[i].IsEmpty())
+            {
+                CardData drawnCard = DeckManager.Instance.DrawCard();
+                if (drawnCard != null)
+                {
+                    cards[i].SetCardData(drawnCard);
+                    yield return new WaitForSeconds(dealDelay);
+                }
+                else
+                {
+                    Debug.LogWarning("牌堆已空，无法继续发牌");
+                    break;
+                }
+            }
+        }
+
+        Debug.Log("初始发牌完成");
+    }
+
+    /// <summary>
+    /// 手动发牌（通过按钮调用）- 补充手牌到满
+    /// </summary>
+    public void DealCards()
+    {
+        StartCoroutine(DealCardsCoroutine());
+    }
+
+    /// <summary>
+    /// 发牌协程（补充空位）
+    /// </summary>
+    private IEnumerator DealCardsCoroutine()
+    {
+        if (DeckManager.Instance == null)
+        {
+            Debug.LogError("DeckManager不存在！");
+            yield break;
+        }
+
+        int dealtCount = 0;
+
+        for (int i = 0; i < cards.Count; i++)
+        {
+            if (cards[i].IsEmpty())
+            {
+                CardData drawnCard = DeckManager.Instance.DrawCard();
+                if (drawnCard != null)
+                {
+                    cards[i].SetCardData(drawnCard);
+                    dealtCount++;
+                    yield return new WaitForSeconds(dealDelay);
+                }
+                else
+                {
+                    Debug.LogWarning("牌堆已空，无法继续发牌");
+                    break;
+                }
+            }
+        }
+
+        Debug.Log($"发牌完成，共发了 {dealtCount} 张牌");
     }
 
     private void BeginDrag(Card card)
