@@ -64,7 +64,7 @@ public class HorizontalCardHolder : MonoBehaviour
             if (DeckManager.Instance != null)
             {
                 DeckManager.Instance.InitializeDeck();
-                
+
                 if (dealOnStart)
                 {
                     StartCoroutine(DealInitialHand());
@@ -83,7 +83,7 @@ public class HorizontalCardHolder : MonoBehaviour
     private IEnumerator DealInitialHand()
     {
         Debug.Log("开始初始发牌...");
-        
+
         for (int i = 0; i < cards.Count; i++)
         {
             if (cards[i].IsEmpty())
@@ -159,7 +159,7 @@ public class HorizontalCardHolder : MonoBehaviour
         if (selectedCard == null)
             return;
 
-        selectedCard.transform.DOLocalMove(selectedCard.selected ? new Vector3(0,selectedCard.selectionOffset,0) : Vector3.zero, tweenCardReturn ? .15f : 0).SetEase(Ease.OutBack);
+        selectedCard.transform.DOLocalMove(selectedCard.selected ? new Vector3(0, selectedCard.selectionOffset, 0) : Vector3.zero, tweenCardReturn ? .15f : 0).SetEase(Ease.OutBack);
 
         rect.sizeDelta += Vector2.right;
         rect.sizeDelta -= Vector2.right;
@@ -172,7 +172,8 @@ public class HorizontalCardHolder : MonoBehaviour
     {
         hoveredCard = card;
 
-        audio_hover.Play();
+        if (audio_hover != null)
+            audio_hover.Play();
     }
 
     void CardPointerExit(Card card)
