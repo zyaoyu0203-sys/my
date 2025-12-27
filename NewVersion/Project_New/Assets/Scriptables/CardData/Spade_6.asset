@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 32
   cardType: 0
-  suit: 0
+  suit: 3
   rank: 6
   sprite: {fileID: 21300000, guid: 4a4d632275411f84e845f27a34e98b23, type: 3}
   canBeDiscarded: 1

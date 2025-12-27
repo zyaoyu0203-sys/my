@@ -72,27 +72,54 @@ public class DeckPreviewUI : MonoBehaviour
             return;
         }
 
-        // 按以下顺序排列：
-        // 1. 红心 1-9
-        CreateCardsForSuit(allCards, Suit.Heart);
+        // 调试：打印所有卡牌信息
+        Debug.Log($"[DeckPreviewUI] 数据库共有 {allCards.Count} 张卡牌");
+        for (int i = 0; i < allCards.Count; i++)
+        {
+            var card = allCards[i];
+            Debug.Log($"  [{i}] {card.cardName} - Type:{card.cardType}, Suit:{card.suit}, Rank:{card.rank}");
+        }
         
-        // 2. 方块 1-9
-        CreateCardsForSuit(allCards, Suit.Diamond);
+        // 按花色+点数排列（9列布局，共6行）
         
-        // 3. 梅花 1-9
-        CreateCardsForSuit(allCards, Suit.Club);
-        
-        // 4. 黑桃 1-9
+        // 第1行：黑桃1-9
         CreateCardsForSuit(allCards, Suit.Spade);
         
-        // 5. 黑牌
+        // 第2行：红心1-9
+        CreateCardsForSuit(allCards, Suit.Heart);
+        
+        // 第3行：梅花1-9
+        CreateCardsForSuit(allCards, Suit.Club);
+        
+        // 第4行：方块1-9
+        CreateCardsForSuit(allCards, Suit.Diamond);
+        
+        // 第5行：黑卡
         CreateCardsForType(allCards, CardType.Black);
         
-        // 6. 金牌
+        // 第6行：金卡
         CreateCardsForType(allCards, CardType.Gold);
+
 
         isInitialized = true;
         Debug.Log($"牌堆预览UI初始化完成，共创建 {cardIcons.Count} 个图标");
+    }
+
+    /// <summary>
+    /// 根据ID范围创建卡牌图标
+    /// </summary>
+    private void CreateCardsForIDRange(List<CardData> allCards, int startID, int endID)
+    {
+        // 筛选指定ID范围的卡牌
+        var rangeCards = allCards.FindAll(c => c.id >= startID && c.id <= endID);
+        
+        // 按ID排序
+        rangeCards.Sort((a, b) => a.id.CompareTo(b.id));
+        
+        foreach (var cardData in rangeCards)
+        {
+            CreateCardIcon(cardData);
+        }
     }
 
     /// <summary>
@@ -101,12 +128,14 @@ public class DeckPreviewUI : MonoBehaviour
     private void CreateCardsForSuit(List<CardData> allCards, Suit suit)
     {
         var suitCards = allCards.FindAll(c => c.cardType == CardType.Basic && c.suit == suit);
-        
+
         // 按rank排序
         suitCards.Sort((a, b) => a.rank.CompareTo(b.rank));
 
+        Debug.Log($"[DeckPreviewUI] 花色 {suit} 找到 {suitCards.Count} 张牌");
         foreach (var cardData in suitCards)
         {
+            Debug.Log($"  - {cardData.cardName} (Type:{cardData.cardType}, Suit:{cardData.suit}, Rank:{cardData.rank})");
             CreateCardIcon(cardData);
         }
     }

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Gold_Card_3
   m_EditorClassIdentifier: 
   id: 39
-  cardType: 0
+  cardType: 2
   suit: 0
   rank: 0
   sprite: {fileID: 21300000, guid: 20144eb8e9fa2664990acd68fd452208, type: 3}
