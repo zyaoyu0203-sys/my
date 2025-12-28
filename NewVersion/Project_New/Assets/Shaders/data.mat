@@ -24,15 +24,20 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 058e67f02436ab14da028b77a8b9e7fd, type: 3}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: -0.08, y: 0}
+        m_Texture: {fileID: 2800000, guid: c0a783e514a011142990b54af9112716, type: 3}
+        m_Scale: {x: 1.14, y: 0.94}
+        m_Offset: {x: -0.1, y: 0}
     m_Ints: []
     m_Floats:
     - _DistortAmount: 0.3
     - _DistortSpeed: 0.8
+    - _DistortionAmount: 0
+    - _DistortionSpeed: 0.7
     - _EdgeGlow: 0.2
+    - _EdgeIntensity: 2
     - _EdgeWidth: 0.02
+    - _FlickerAmount: 0.1
+    - _FlickerSpeed: 3
     - _FloatAmount: 0.1
     - _FloatSpeed: 0.5
     - _FresnelPower: 1
@@ -53,20 +58,21 @@ Material:
     - _RGBSplitAmount: 0.01
     - _ScanlineBrightness: 1
     - _ScanlineChance: 1
+    - _ScanlineCount: 20
     - _ScanlineFrequency: 3
     - _ScanlineIntensity: 0.034
-    - _ScanlineSpeed: 1
+    - _ScanlineSpeed: 0.6
     - _ScanlineWidth: 0.01
     - _TintStrength: 0.3
-    - _Transparency: 0.6
+    - _Transparency: 0
     - _WarpIntensity: 0.5
     - _WaveAmount: 0.02
     - _WaveAmplitude: 0.1
     - _WaveFrequency: 0.2
     - _WaveSpeed: 0.3
     m_Colors:
-    - _Color: {r: 0.23018861, g: 0.15592021, b: 0.18562758, a: 0.6}
-    - _EdgeColor: {r: 0.25882354, g: 0.09411766, b: 0.15294118, a: 1}
+    - _Color: {r: 0.7207546, g: 0.6405196, b: 0.6700799, a: 0.6}
+    - _EdgeColor: {r: 0.23137257, g: 0.15686275, b: 0.18431373, a: 1}
     - _GridColor: {r: 0.454902, g: 0.31764707, b: 0.30980393, a: 0.8}
     - _ScanlineColor: {r: 0.29864496, g: 0.26652184, b: 0.3132075, a: 0.69803923}
   m_BuildTextureStacks: []

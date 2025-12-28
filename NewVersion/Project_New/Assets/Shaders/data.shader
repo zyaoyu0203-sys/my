@@ -1,40 +1,46 @@
-Shader "Custom/GlitchHologram"
+Shader "Custom/HologramTopOnly"
 {
     Properties
     {
-        _MainTex ("桌面贴图", 2D) = "white" {}
-        _Color ("全息色调", Color) = (0.5, 0.9, 1, 1)
-        _Transparency ("透明度", Range(0, 1)) = 0.6
-        _TintStrength ("色调强度", Range(0, 1)) = 0.3
+        _MainTex ("桌面贴图（只显示在顶面）", 2D) = "white" {}
+        _Color ("全息颜色", Color) = (0.4, 0.8, 1, 1)
+        _Transparency ("透明度", Range(0, 1)) = 0.5
         
-        [Header(Wave Distortion)]
-        _DistortSpeed ("扭曲速度", Range(0, 3)) = 1
-        _DistortAmount ("扭曲强度", Range(0, 0.3)) = 0.08
-        
-        [Header(Glitch Effect)]
-        _GlitchFrequency ("Glitch频率", Range(0, 30)) = 8
-        _GlitchIntensity ("Glitch强度", Range(0, 0.5)) = 0.15
-        _RGBSplitAmount ("RGB分离强度", Range(0, 0.1)) = 0.03
-        _InvertChance ("取反色几率", Range(0, 1)) = 0.1
+        [Header(Distortion)]
+        _DistortionAmount ("失真强度", Range(0, 0.2)) = 0.05
+        _DistortionSpeed ("失真速度", Range(0, 3)) = 1
         
         [Header(Scanline)]
         _ScanlineSpeed ("扫描线速度", Range(0, 10)) = 2
-        _ScanlineFrequency ("扫描线频率", Range(1, 100)) = 30
-        _ScanlineWidth ("扫描线宽度", Range(0.001, 0.1)) = 0.02
-        _ScanlineColor ("扫描线颜色", Color) = (0.5, 1, 1, 1)
-        _ScanlineBrightness ("扫描线亮度", Range(0, 3)) = 1
+        _ScanlineCount ("扫描线数量", Range(10, 100)) = 40
+        _ScanlineColor ("扫描线颜色", Color) = (0.3, 0.9, 1, 1)
+        _ScanlineBrightness ("扫描线亮度", Range(0, 2)) = 0.8
         
-        [Header(Noise Lines)]
-        _NoiseLineChance ("噪声线几率", Range(0, 1)) = 0.3
-        _NoiseLineThickness ("噪声线粗细", Range(0.001, 0.05)) = 0.01
+        [Header(Edge Glow)]
+        _EdgeColor ("边缘颜色", Color) = (0.5, 1, 1, 1)
+        _EdgeIntensity ("边缘强度", Range(0, 5)) = 2
+        _FresnelPower ("边缘锐度", Range(1, 10)) = 3
         
-        [Header(Edge)]
-        _EdgeGlow ("边缘发光", Range(0, 5)) = 2
+        [Header(Flicker)]
+        _FlickerSpeed ("闪烁速度", Range(0, 20)) = 5
+        _FlickerAmount ("闪烁强度", Range(0, 0.3)) = 0.1
+        
+        [Header(Side Settings)]
+        _SideTransparency ("侧面透明度", Range(0, 1)) = 0.1
+        
+        [Header(Transparency Control)]
+        _AlphaCutoff ("透明度阈值", Range(0, 1)) = 0.1
+        _DarknessThreshold ("黑色阈值", Range(0, 1)) = 0.05
     }
     
     SubShader
     {
-        Tags {"Queue"="Transparent" "RenderType"="Transparent"}
+        Tags 
+        { 
+            "Queue"="Transparent" 
+            "RenderType"="Transparent"
+        }
+        
         Blend SrcAlpha OneMinusSrcAlpha
         ZWrite Off
         Cull Off
@@ -63,23 +69,23 @@ Shader "Custom/GlitchHologram"
             };
 
             sampler2D _MainTex;
+            float4 _MainTex_ST;
             float4 _Color;
             float _Transparency;
-            float _TintStrength;
-            float _DistortSpeed;
-            float _DistortAmount;
-            float _GlitchFrequency;
-            float _GlitchIntensity;
-            float _RGBSplitAmount;
-            float _InvertChance;
+            float _DistortionAmount;
+            float _DistortionSpeed;
             float _ScanlineSpeed;
-            float _ScanlineFrequency;
-            float _ScanlineWidth;
+            float _ScanlineCount;
             float4 _ScanlineColor;
             float _ScanlineBrightness;
-            float _NoiseLineChance;
-            float _NoiseLineThickness;
-            float _EdgeGlow;
+            float4 _EdgeColor;
+            float _EdgeIntensity;
+            float _FresnelPower;
+            float _FlickerSpeed;
+            float _FlickerAmount;
+            float _SideTransparency;
+            float _AlphaCutoff;
+            float _DarknessThreshold;
 
             float random(float2 p)
             {
@@ -90,7 +96,7 @@ Shader "Custom/GlitchHologram"
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = v.uv;
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.worldNormal = UnityObjectToWorldNormal(v.normal);
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 o.viewDir = normalize(WorldSpaceViewDir(v.vertex));
@@ -102,96 +108,69 @@ Shader "Custom/GlitchHologram"
                 float time = _Time.y;
                 float2 uv = i.uv;
                 
-                // === Glitch块状偏移 ===
-                float glitchTime = floor(time * _GlitchFrequency);
-                float2 blockID = floor(uv * 20.0);
-                float blockRandom = random(blockID + glitchTime);
+                // === 判断是否为顶面 ===
+                float3 worldNormal = normalize(i.worldNormal);
+                float isTopFace = step(0.9, worldNormal.y);
                 
-                // 随机水平块偏移
-                if(blockRandom > 0.85)
+                // === UV失真 ===
+                float2 distortion = float2(
+                    sin(uv.y * 15.0 + time * _DistortionSpeed) * _DistortionAmount,
+                    cos(uv.x * 12.0 - time * _DistortionSpeed * 0.8) * _DistortionAmount
+                );
+                
+                float noise = random(floor(uv * 50.0) + floor(time * 2.0));
+                distortion += (noise - 0.5) * _DistortionAmount * 0.5;
+                
+                uv += distortion;
+                
+                // === 采样贴图 ===
+                fixed4 texColor = tex2D(_MainTex, uv);
+                
+                // ====== 新增：检测无贴图区域 ======
+                // 计算亮度
+                float brightness = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
+                
+                // 如果贴图alpha太低或者颜色太暗，直接丢弃（完全透明）
+                if(texColor.a < _AlphaCutoff || brightness < _DarknessThreshold)
                 {
-                    uv.x += (random(blockID + glitchTime + 10.0) - 0.5) * _GlitchIntensity;
+                    discard;  // 完全不渲染这个像素
                 }
-                
-                // 整行随机偏移（更明显的glitch）
-                float rowID = floor(uv.y * 50.0);
-                float rowRandom = random(float2(rowID, glitchTime));
-                if(rowRandom > 0.9)
-                {
-                    uv.x += (random(float2(rowID + 20.0, glitchTime)) - 0.5) * _GlitchIntensity * 2.0;
-                }
-                
-                // === 波浪扭曲 ===
-                uv.x += sin(uv.y * 10.0 + time * _DistortSpeed) * _DistortAmount;
-                uv.y += cos(uv.x * 8.0 - time * _DistortSpeed * 0.7) * _DistortAmount;
-                
-                // === RGB色彩分离效果 ===
-                float shouldSplit = step(0.92, random(float2(glitchTime, 1.0)));
-                float2 offsetR = float2(_RGBSplitAmount, 0) * shouldSplit;
-                float2 offsetB = float2(-_RGBSplitAmount, 0) * shouldSplit;
-                
-                float r = tex2D(_MainTex, uv + offsetR).r;
-                float g = tex2D(_MainTex, uv).g;
-                float b = tex2D(_MainTex, uv + offsetB).b;
-                float a = tex2D(_MainTex, uv).a;
-                
-                fixed4 col = fixed4(r, g, b, a);
-                
-                // === 取反色效果 ===
-                float invertRandom = random(float2(glitchTime, 2.0));
-                if(invertRandom < _InvertChance && blockRandom > 0.8)
-                {
-                    col.rgb = 1.0 - col.rgb;
-                }
+                // ====================================
                 
                 // === 扫描线 ===
-                float scanlinePos = frac(i.worldPos.y * _ScanlineFrequency / 10.0 - time * _ScanlineSpeed);
-                float scanline = smoothstep(_ScanlineWidth, 0.0, abs(scanlinePos - 0.5)) * _ScanlineBrightness;
-                
-                // === 随机噪声横线 ===
-                float noiseLine = 0.0;
-                float lineY = floor(i.uv.y * 100.0);
-                float lineRandom = random(float2(lineY, floor(time * 5.0)));
-                if(lineRandom < _NoiseLineChance)
-                {
-                    float linePos = frac(i.uv.y * 100.0);
-                    noiseLine = step(linePos, _NoiseLineThickness);
-                }
+                float scanlinePos = frac(i.worldPos.y * _ScanlineCount / 10.0 - time * _ScanlineSpeed);
+                float scanline = smoothstep(0.02, 0.0, abs(scanlinePos - 0.5)) * _ScanlineBrightness;
                 
                 // === Fresnel边缘发光 ===
-                float fresnel = pow(1.0 - saturate(dot(normalize(i.worldNormal), i.viewDir)), 2.5);
-                fresnel *= _EdgeGlow;
+                float fresnel = 1.0 - saturate(dot(worldNormal, i.viewDir));
+                fresnel = pow(fresnel, _FresnelPower) * _EdgeIntensity;
+                
+                // === 全息闪烁 ===
+                float flicker = sin(time * _FlickerSpeed) * _FlickerAmount + 1.0;
+                flicker *= (1.0 + random(floor(time * _FlickerSpeed)) * _FlickerAmount);
                 
                 // === 组合效果 ===
-                // 保持贴图清晰可见
-                col.rgb = lerp(col.rgb, col.rgb * _Color.rgb, _TintStrength);
+                fixed4 finalColor;
                 
-                // 添加扫描线（用自定义颜色）
-                col.rgb += scanline * _ScanlineColor.rgb;
-                
-                // 添加噪声线
-                col.rgb += noiseLine * float3(1, 1, 1) * 0.5;
-                
-                // 添加边缘发光
-                col.rgb += fresnel * _Color.rgb;
-                
-                // Glitch时的额外效果
-                if(blockRandom > 0.88)
+                if(isTopFace > 0.5)
                 {
-                    // 添加色块
-                    col.rgb += float3(
-                        random(blockID + 30.0),
-                        random(blockID + 40.0),
-                        random(blockID + 50.0)
-                    ) * 0.3;
+                    // 顶面：显示贴图 + 所有效果
+                    finalColor = texColor;
+                    finalColor.rgb = lerp(finalColor.rgb, finalColor.rgb * _Color.rgb, 0.3);
+                    finalColor.rgb += scanline * _ScanlineColor.rgb;
+                    finalColor.rgb += fresnel * _EdgeColor.rgb;
+                    finalColor.rgb *= flicker;
+                    finalColor.a = _Transparency + fresnel * 0.5 + scanline * 0.2;
+                }
+                else
+                {
+                    // 侧面：只有边缘光，超透明
+                    finalColor = float4(_EdgeColor.rgb * fresnel, _SideTransparency + fresnel * 0.3);
                 }
                 
-                // 透明度
-                col.a = _Transparency;
-                col.a += scanline * 0.3;
-                col.a += fresnel * 0.4;
+                finalColor.a = saturate(finalColor.a);
                 
-                return col;
+                return finalColor;
             }
             ENDCG
         }
