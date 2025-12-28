@@ -6,7 +6,7 @@ Shader "UI/GlitchPanelEnhanced"
         _Color ("Panel Color", Color) = (0.2, 0.2, 0.2, 0.6)
         
         [Header(Rounded Corners)]
-        _CornerRadius ("Corner Radius", Range(0, 100)) = 30
+        _Radius ("Corner Radius", Range(0, 0.5)) = 0.1
         
         [Header(Border)]
         _BorderColor ("Border Color", Color) = (0.5, 1, 1, 1)
@@ -100,7 +100,7 @@ Shader "UI/GlitchPanelEnhanced"
             sampler2D _MainTex;
             float4 _MainTex_ST;
             fixed4 _Color;
-            float _CornerRadius;
+            float _Radius;
             fixed4 _BorderColor;
             float _BorderWidth;
             float _BorderGlow;
@@ -128,11 +128,6 @@ Shader "UI/GlitchPanelEnhanced"
                 return frac(sin(dot(p, float2(12.9898, 78.233))) * 43758.5453);
             }
 
-            float roundedBoxSDF(float2 centerPos, float2 size, float radius)
-            {
-                return length(max(abs(centerPos) - size + radius, 0.0)) - radius;
-            }
-
             v2f vert (appdata v)
             {
                 v2f o;
@@ -148,13 +143,16 @@ Shader "UI/GlitchPanelEnhanced"
                 float time = _Time.y;
                 float2 uv = i.uv;
                 
-                // === 圆角遮罩 ===
-                float2 centerPos = (uv - 0.5) * 2.0;
-                float2 pixelSize = fwidth(uv);
-                float radiusUV = _CornerRadius * pixelSize.x;
-                float dist = roundedBoxSDF(centerPos, float2(1.0, 1.0), radiusUV);
-                float smoothWidth = length(pixelSize) * 2.0;
-                float roundedMask = 1.0 - smoothstep(-smoothWidth, smoothWidth, dist);
+                // === 圆角计算 ===
+                float2 d = min(uv, 1.0 - uv);
+                float cornerAlpha = 1.0;
+                
+                if(d.x < _Radius && d.y < _Radius)
+                {
+                    float2 toCorner = _Radius - d;
+                    float dist = length(toCorner);
+                    cornerAlpha = smoothstep(_Radius, _Radius - 0.01, dist);
+                }
                 
                 // === 边缘距离 ===
                 float2 edgeDist = min(uv, 1.0 - uv);
@@ -230,9 +228,7 @@ Shader "UI/GlitchPanelEnhanced"
                 float fog = random(uv * 50.0 + time * 0.1) * _FogAmount;
                 col.rgb += fog * 0.1;
                 
-                // === 应用圆角遮罩 ===
-                col.a *= roundedMask;
-                
+                col.a *= cornerAlpha;
                 col.a *= UnityGet2DClipping(i.worldPos.xy, _ClipRect);
                 
                 return col;

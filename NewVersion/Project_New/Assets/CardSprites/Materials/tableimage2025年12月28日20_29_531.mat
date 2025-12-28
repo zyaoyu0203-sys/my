@@ -41,7 +41,7 @@ Material:
     - _ScanlineCount: 10
     - _ScanlineSpeed: 0.2
     - _SideTransparency: 0
-    - _Transparency: 0.6
+    - _Transparency: 0.8
     m_Colors:
     - _Color: {r: 1, g: 0.90377355, b: 0.90377355, a: 0.7058824}
     - _EdgeColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 0}

@@ -36,6 +36,7 @@ Material:
     - _ChromaticEdgeFade: 0.5
     - _ChromaticShift: 0.6
     - _ColorMask: 51.2
+    - _CornerRadius: 35
     - _FogAmount: 0.5
     - _GlitchIntensity: 0.2
     - _GlitchSpeed: 2
@@ -43,6 +44,7 @@ Material:
     - _MoireIntensity: 0.2
     - _MoireScale: 20
     - _MoireSpeed: 0.5
+    - _Radius: 0.5
     - _ScanlineCount: 200
     - _ScanlineIntensity: 0.01
     - _ScanlineSpeed: 1
@@ -60,6 +62,6 @@ Material:
     - _StripeWidth: 0.05
     m_Colors:
     - _BorderColor: {r: 0.020697676, g: 0.5773585, b: 0.29902807, a: 0.54509807}
-    - _Color: {r: 0.06817122, g: 0.054574586, b: 0.13207549, a: 1}
+    - _Color: {r: 0.06817119, g: 0.054574564, b: 0.13207546, a: 0.44705883}
     - _StripeColor: {r: 1, g: 1, b: 1, a: 0.1}
   m_BuildTextureStacks: []
