@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 18b28bbb4304dd14f89b8d671a9fc941
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - eyeOverlay: {fileID: 5173140640293727151, guid: f46a99cdb1dbed347b7b1ae852d888cd, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

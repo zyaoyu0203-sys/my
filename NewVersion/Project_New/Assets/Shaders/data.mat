@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: data
-  m_Shader: {fileID: 4800000, guid: 2a17a888510a8d84b8931179b2b4781a, type: 3}
+  m_Shader: {fileID: 4800000, guid: c4ea4c13aed54954fb1746a0915daa44, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -19,16 +19,18 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties: _Color
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: c0a783e514a011142990b54af9112716, type: 3}
-        m_Scale: {x: 1.14, y: 0.94}
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 15.37, y: 0.94}
         m_Offset: {x: -0.1, y: 0}
     m_Ints: []
     m_Floats:
+    - _AlphaCutoff: 0.1
+    - _DarknessThreshold: 0.05
     - _DistortAmount: 0.3
     - _DistortSpeed: 0.8
     - _DistortionAmount: 0
@@ -37,6 +39,8 @@ Material:
     - _EdgeIntensity: 2
     - _EdgeWidth: 0.02
     - _FlickerAmount: 0.1
+    - _FlickerBrightness: 1.8
+    - _FlickerChance: 0.05
     - _FlickerSpeed: 3
     - _FloatAmount: 0.1
     - _FloatSpeed: 0.5
@@ -63,8 +67,9 @@ Material:
     - _ScanlineIntensity: 0.034
     - _ScanlineSpeed: 0.6
     - _ScanlineWidth: 0.01
+    - _SideTransparency: 0.1
     - _TintStrength: 0.3
-    - _Transparency: 0
+    - _Transparency: 0.5
     - _WarpIntensity: 0.5
     - _WaveAmount: 0.02
     - _WaveAmplitude: 0.1

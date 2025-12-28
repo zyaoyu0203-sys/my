@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Button
+  m_Shader: {fileID: 4800000, guid: 6067bd899d6588445899b674d97edaf1, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _ColorMask: 15
+    - _DropShadowBlur: 0.03
+    - _Glitch: 0.1
+    - _InnerShadowDepth: 0.03
+    - _InnerShadowSize: 5
+    - _NoiseAmount: 0.2
+    - _NoiseSpeed: 3
+    - _OutlineWidth: 0.015
+    - _PixelSize: 20
+    - _ScanlineSpeed: 2
+    - _ShadowOffsetX: 3
+    - _ShadowOffsetY: -3
+    - _Stencil: 0
+    - _StencilComp: 8
+    - _StencilOp: 0
+    - _StencilReadMask: 255
+    - _StencilWriteMask: 255
+    m_Colors:
+    - _Color: {r: 0.85660374, g: 0.18586673, b: 0.4714914, a: 0.72156864}
+    - _DropShadowColor: {r: 0, g: 0, b: 0, a: 0.5}
+    - _DropShadowOffset: {r: 0.02, g: -0.02, b: 0, a: 0}
+    - _HighlightColor: {r: 1, g: 1, b: 1, a: 0.3}
+    - _InnerShadowColor: {r: 0, g: 0, b: 0, a: 0.4}
+    - _OutlineColor: {r: 0.19999996, g: 0.5, b: 0.8, a: 1}
+    - _ScanlineColor: {r: 0.6754716, g: 0.630865, b: 0.630865, a: 0.5}
+    - _ShadowColor: {r: 0, g: 0.5, b: 0.8, a: 0.5}
+  m_BuildTextureStacks: []

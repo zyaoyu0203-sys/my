@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0fbda52be669386489ef41a1c2959a95
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - dialoguePanel: {fileID: 9020383873027409205, guid: 01f6e38f79ebe8a428dc6c1d47a78018, type: 3}
+  - dialogueText: {fileID: 6088412701645112764, guid: b269ad1e4beb23949974482a06533c99, type: 3}
+  - friendMaterial: {fileID: 2100000, guid: e9ea4cfcdd6fadd459a940691692c986, type: 2}
+  - friendTransform: {fileID: 7790809721609719104, guid: d1ae5e9959c0f124181c74b4c33ba3b7, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

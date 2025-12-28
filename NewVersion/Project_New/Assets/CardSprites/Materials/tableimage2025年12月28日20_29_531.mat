@@ -33,17 +33,17 @@ Material:
     - _DarknessThreshold: 0.05
     - _DistortionAmount: 0.005
     - _DistortionSpeed: 1
-    - _EdgeIntensity: 2
+    - _EdgeIntensity: 0.4
     - _FlickerAmount: 0.1
     - _FlickerSpeed: 5
     - _FresnelPower: 3
-    - _ScanlineBrightness: 0.8
+    - _ScanlineBrightness: 0.3
     - _ScanlineCount: 10
     - _ScanlineSpeed: 0.2
     - _SideTransparency: 0
-    - _Transparency: 0.4
+    - _Transparency: 0.6
     m_Colors:
-    - _Color: {r: 1, g: 0.9037736, b: 0.9037736, a: 0.79607844}
-    - _EdgeColor: {r: 0, g: 0, b: 0, a: 0}
+    - _Color: {r: 1, g: 0.90377355, b: 0.90377355, a: 0.7058824}
+    - _EdgeColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 0}
     - _ScanlineColor: {r: 0.3838447, g: 0.6377357, b: 0.6377357, a: 0.21568628}
   m_BuildTextureStacks: []
