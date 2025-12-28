@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: data
+  m_Shader: {fileID: 4800000, guid: 2a17a888510a8d84b8931179b2b4781a, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 058e67f02436ab14da028b77a8b9e7fd, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: -0.08, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _DistortAmount: 0.3
+    - _DistortSpeed: 0.8
+    - _EdgeGlow: 0.2
+    - _EdgeWidth: 0.02
+    - _FloatAmount: 0.1
+    - _FloatSpeed: 0.5
+    - _FresnelPower: 1
+    - _GlitchAmount: 0.0115
+    - _GlitchBlockSize: 20
+    - _GlitchFrequency: 1
+    - _GlitchIntensity: 0.005
+    - _GridChance: 0.15
+    - _GridSize: 50
+    - _GridThickness: 0.012
+    - _HologramTint: 0.3
+    - _InvertChance: 0.01
+    - _NoiseLineChance: 0.3
+    - _NoiseLineThickness: 0.01
+    - _NoiseScale: 2
+    - _NoiseStrength: 0.15
+    - _PixelSize: 4
+    - _RGBSplitAmount: 0.01
+    - _ScanlineBrightness: 1
+    - _ScanlineChance: 1
+    - _ScanlineFrequency: 3
+    - _ScanlineIntensity: 0.034
+    - _ScanlineSpeed: 1
+    - _ScanlineWidth: 0.01
+    - _TintStrength: 0.3
+    - _Transparency: 0.6
+    - _WarpIntensity: 0.5
+    - _WaveAmount: 0.02
+    - _WaveAmplitude: 0.1
+    - _WaveFrequency: 0.2
+    - _WaveSpeed: 0.3
+    m_Colors:
+    - _Color: {r: 0.23018861, g: 0.15592021, b: 0.18562758, a: 0.6}
+    - _EdgeColor: {r: 0.25882354, g: 0.09411766, b: 0.15294118, a: 1}
+    - _GridColor: {r: 0.454902, g: 0.31764707, b: 0.30980393, a: 0.8}
+    - _ScanlineColor: {r: 0.29864496, g: 0.26652184, b: 0.3132075, a: 0.69803923}
+  m_BuildTextureStacks: []
