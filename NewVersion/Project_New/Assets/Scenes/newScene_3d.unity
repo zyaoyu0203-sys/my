@@ -1533,7 +1533,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &291499708
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2149,7 +2149,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &398503980
 RectTransform:
   m_ObjectHideFlags: 0
@@ -4529,6 +4529,8 @@ MonoBehaviour:
   cardMoveSpeed: 0.5
   cardStayDuration: 1
   centerScreenOffset: {x: 0, y: 0, z: 0}
+  autoRefillCards: 1
+  refillDelay: 0.3
   OnPlaySuccess:
     m_PersistentCalls:
       m_Calls: []
@@ -5613,7 +5615,7 @@ MonoBehaviour:
   friendCharacter: {fileID: 340630989}
   cameraShake: {fileID: 44545673}
   typeSpeed: 0.03
-  cardSystemInitDelay: 5
+  cardSystemInitDelay: 0.5
   yourColor: {r: 1, g: 1, b: 1, a: 1}
   bobbyColor: {r: 1, g: 0.26226407, b: 0.88754267, a: 1}
   hideObjects:

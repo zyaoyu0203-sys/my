@@ -16,6 +16,12 @@ public class CardManager : MonoBehaviour
     [SerializeField] private float cardMoveSpeed = 0.5f;
     [SerializeField] private float cardStayDuration = 1f;
     [SerializeField] private Vector3 centerScreenOffset = Vector3.zero;
+    
+    [Header("Auto Refill")]
+    [Tooltip("打出或弃牌后是否自动补牌")]
+    [SerializeField] private bool autoRefillCards = true;
+    [Tooltip("自动补牌延迟时间（秒）")]
+    [SerializeField] private float refillDelay = 0.3f;
 
     [Header("Play Events")]
     public UnityEvent OnPlaySuccess;              // 出牌成功
@@ -259,6 +265,13 @@ public class CardManager : MonoBehaviour
         DeselectAllCards();
 
         Debug.Log("打出动画完成");
+        
+        // 自动补牌
+        if (autoRefillCards)
+        {
+            yield return new WaitForSeconds(refillDelay);
+            RefillEmptySlots();
+        }
     }
 
     /// <summary>
@@ -307,6 +320,33 @@ public class CardManager : MonoBehaviour
         DeselectAllCards();
 
         Debug.Log("弃牌动画完成");
+        
+        // 自动补牌
+        if (autoRefillCards)
+        {
+            yield return new WaitForSeconds(refillDelay);
+            RefillEmptySlots();
+        }
+    }
+    
+    /// <summary>
+    /// 自动补齐空槽位的卡牌
+    /// </summary>
+    private void RefillEmptySlots()
+    {
+        // 查找HorizontalCardHolder
+        HorizontalCardHolder cardHolder = FindObjectOfType<HorizontalCardHolder>();
+        
+        if (cardHolder == null)
+        {
+            Debug.LogWarning("未找到HorizontalCardHolder，无法自动补牌");
+            return;
+        }
+        
+        // 调用HorizontalCardHolder的发牌方法
+        cardHolder.DealCards();
+        
+        Debug.Log("已触发自动补牌");
     }
 
 }
