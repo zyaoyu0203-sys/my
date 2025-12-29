@@ -216,7 +216,13 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardVisual.cardImage.sprite = data.sprite;
             cardVisual.cardImage.enabled = true;
-            Debug.Log($"CardVisual图片已更新: {data.cardName}");
+            
+            // 重置alpha为1（防止渐隐后残留透明状态）
+            Color color = cardVisual.cardImage.color;
+            color.a = 1f;
+            cardVisual.cardImage.color = color;
+            
+            Debug.Log($"CardVisual图片已更新: {data.cardName}，alpha重置为1");
         }
         else if (cardVisual == null)
         {
@@ -232,6 +238,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardImage.sprite = data.sprite;
             cardImage.enabled = true;
+            
+            // 重置alpha为1
+            Color color = cardImage.color;
+            color.a = 1f;
+            cardImage.color = color;
         }
 
         Debug.Log($"卡牌数据已设置: {(data != null ? data.cardName : "null")}");

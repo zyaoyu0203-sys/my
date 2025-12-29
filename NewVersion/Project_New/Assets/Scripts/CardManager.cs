@@ -16,6 +16,8 @@ public class CardManager : MonoBehaviour
     [SerializeField] private float cardMoveSpeed = 0.5f;
     [SerializeField] private float cardStayDuration = 1f;
     [SerializeField] private Vector3 centerScreenOffset = Vector3.zero;
+    [Tooltip("卡牌渐隐消失的时间（秒）")]
+    [SerializeField] private float cardFadeOutDuration = 1f;
     
     [Header("Auto Refill")]
     [Tooltip("打出或弃牌后是否自动补牌")]
@@ -255,6 +257,19 @@ public class CardManager : MonoBehaviour
         // 等待停留时间
         yield return new WaitForSeconds(cardStayDuration);
 
+        // 渐隐效果
+        foreach (var card in cards)
+        {
+            if (card.cardVisual != null && card.cardVisual.cardImage != null)
+            {
+                // 使用DOTween淡出卡牌图片
+                card.cardVisual.cardImage.DOFade(0f, cardFadeOutDuration).SetEase(Ease.InQuad);
+            }
+        }
+        
+        // 等待渐隐完成
+        yield return new WaitForSeconds(cardFadeOutDuration);
+
         // 清空卡牌数据（但保留slot）
         foreach (var card in cards)
         {
@@ -309,6 +324,19 @@ public class CardManager : MonoBehaviour
 
         // 等待停留时间
         yield return new WaitForSeconds(cardStayDuration);
+
+        // 渐隐效果
+        foreach (var card in cards)
+        {
+            if (card.cardVisual != null && card.cardVisual.cardImage != null)
+            {
+                // 使用DOTween淡出卡牌图片
+                card.cardVisual.cardImage.DOFade(0f, cardFadeOutDuration).SetEase(Ease.InQuad);
+            }
+        }
+        
+        // 等待渐隐完成
+        yield return new WaitForSeconds(cardFadeOutDuration);
 
         // 清空卡牌数据（但保留slot）
         foreach (var card in cards)

@@ -4529,8 +4529,9 @@ MonoBehaviour:
   cardMoveSpeed: 0.5
   cardStayDuration: 1
   centerScreenOffset: {x: 0, y: 0, z: 0}
+  cardFadeOutDuration: 0.3
   autoRefillCards: 1
-  refillDelay: 0.3
+  refillDelay: 0.1
   OnPlaySuccess:
     m_PersistentCalls:
       m_Calls: []
@@ -5625,8 +5626,6 @@ MonoBehaviour:
   - {fileID: 544559083}
   - {fileID: 448129006}
   - {fileID: 1606507438}
-  - {fileID: 398503979}
-  - {fileID: 291499707}
   - {fileID: 590398363}
   fadeInDuration: 1.5
 --- !u!4 &1524295978
