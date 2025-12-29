@@ -17,6 +17,7 @@ MonoBehaviour:
   suit: 0
   rank: 6
   sprite: {fileID: 21300000, guid: fabbf7867c8cac348b1a0d9432ca6602, type: 3}
+  shaderEdition: 0
   canBeDiscarded: 1
   canBePlayed: 1
   cardName: "\u7EA2\u5FC36"

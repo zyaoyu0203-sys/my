@@ -124,13 +124,60 @@ public class HorizontalCardHolder : MonoBehaviour
             yield break;
         }
 
+        // 检查是否启用特殊发牌模式
+        bool useSpecialMode = CardManager.Instance != null && CardManager.Instance.EnableSpecialDealMode;
+        int dealCount = useSpecialMode ? CardManager.Instance.DealCount : -1;
+
         int dealtCount = 0;
+        int goldDealt = 0;
+        int blackDealt = 0;
 
         for (int i = 0; i < cards.Count; i++)
         {
             if (cards[i].IsEmpty())
             {
-                CardData drawnCard = DeckManager.Instance.DrawCard();
+                CardData drawnCard = null;
+
+                // 根据发牌次数决定发牌策略
+                if (useSpecialMode && dealCount == 0)
+                {
+                    // 第一次：只发基础牌
+                    drawnCard = DrawBasicCard();
+                    if (drawnCard == null)
+                    {
+                        Debug.LogWarning("没有可用的基础牌，使用随机抽牌");
+                        drawnCard = DeckManager.Instance.DrawCard();
+                    }
+                }
+                else if (useSpecialMode && dealCount == 1)
+                {
+                    // 第二次：发金牌和黑牌
+                    int goldTarget = CardManager.Instance.GoldCardsInSecondDeal;
+                    int blackTarget = CardManager.Instance.BlackCardsInSecondDeal;
+
+                    if (goldDealt < goldTarget)
+                    {
+                        drawnCard = DrawSpecificCard(CardType.Gold);
+                        if (drawnCard != null) goldDealt++;
+                    }
+                    else if (blackDealt < blackTarget)
+                    {
+                        drawnCard = DrawSpecificCard(CardType.Black);
+                        if (drawnCard != null) blackDealt++;
+                    }
+
+                    // 如果金牌和黑牌都发完了，或者找不到指定类型的牌
+                    if (drawnCard == null)
+                    {
+                        drawnCard = DeckManager.Instance.DrawCard();
+                    }
+                }
+                else
+                {
+                    // 第三次及以后：正常随机
+                    drawnCard = DeckManager.Instance.DrawCard();
+                }
+
                 if (drawnCard != null)
                 {
                     cards[i].SetCardData(drawnCard);
@@ -145,7 +192,65 @@ public class HorizontalCardHolder : MonoBehaviour
             }
         }
 
+        // 增加发牌计数
+        if (useSpecialMode && CardManager.Instance != null)
+        {
+            CardManager.Instance.IncrementDealCount();
+        }
+
         Debug.Log($"发牌完成，共发了 {dealtCount} 张牌");
+    }
+
+    /// <summary>
+    /// 抽取一张基础牌（CardType.Basic）
+    /// </summary>
+    private CardData DrawBasicCard()
+    {
+        if (DeckManager.Instance == null) return null;
+
+        List<CardData> deckCards = DeckManager.Instance.GetDeckCards();
+        CardData basicCard = deckCards.FirstOrDefault(card => card.cardType == CardType.Basic);
+
+        if (basicCard != null)
+        {
+            // 从牌堆中抽出这张牌
+            DeckManager.Instance.DrawCard(); // 先随机抽一张
+            // 找到并返回基础牌
+            CardData drawnCard = DeckManager.Instance.DrawCard();
+            while (drawnCard != null && drawnCard.cardType != CardType.Basic)
+            {
+                // 如果不是基础牌，继续抽
+                drawnCard = DeckManager.Instance.DrawCard();
+            }
+            return drawnCard;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// 抽取指定类型的牌
+    /// </summary>
+    private CardData DrawSpecificCard(CardType targetType)
+    {
+        if (DeckManager.Instance == null) return null;
+
+        List<CardData> deckCards = DeckManager.Instance.GetDeckCards();
+        CardData targetCard = deckCards.FirstOrDefault(card => card.cardType == targetType);
+
+        if (targetCard != null)
+        {
+            // 从牌堆中抽出这张牌
+            CardData drawnCard = DeckManager.Instance.DrawCard();
+            while (drawnCard != null && drawnCard.cardType != targetType)
+            {
+                // 如果不是目标类型，继续抽
+                drawnCard = DeckManager.Instance.DrawCard();
+            }
+            return drawnCard;
+        }
+
+        return null;
     }
 
     private void BeginDrag(Card card)

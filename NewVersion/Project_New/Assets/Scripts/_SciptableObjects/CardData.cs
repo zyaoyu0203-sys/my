@@ -11,6 +11,10 @@ public class CardData : ScriptableObject
 
     [Header("Visual")]
     public Sprite sprite;                   // 卡面图
+    
+    [Header("Shader Effect")]
+    [Tooltip("卡牌的特殊shader效果，默认为Regular（无特效）")]
+    public ShaderEdition shaderEdition = ShaderEdition.Regular;  // 特效类型
 
     [Header("Rules")]
     public bool canBeDiscarded = true;      // 黑牌为false
@@ -34,4 +38,13 @@ public enum Suit
     Club = 2,       // 梅花
     Spade = 3,      // 黑桃
     None = 4        // 无花色（黑牌、金牌）
+}
+
+public enum ShaderEdition
+{
+    Regular = 0,      // 常规（默认，无特效）
+    Polychrome = 1,   // 多彩效果
+    Negative = 2,     // 负片效果
+    Foil = 3,         // 闪箔效果
+    Holographic = 4   // 全息效果
 }

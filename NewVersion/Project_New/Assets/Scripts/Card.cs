@@ -222,7 +222,10 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             color.a = 1f;
             cardVisual.cardImage.color = color;
             
-            Debug.Log($"CardVisual图片已更新: {data.cardName}，alpha重置为1");
+            // 应用shader效果
+            ApplyShaderEdition(data.shaderEdition);
+            
+            Debug.Log($"CardVisual图片已更新: {data.cardName}，alpha重置为1，shader: {data.shaderEdition}");
         }
         else if (cardVisual == null)
         {
@@ -246,6 +249,36 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         }
 
         Debug.Log($"卡牌数据已设置: {(data != null ? data.cardName : "null")}");
+    }
+    
+    /// <summary>
+    /// 应用shader效果到卡牌（参考ShaderCode.cs的实现）
+    /// </summary>
+    private void ApplyShaderEdition(ShaderEdition edition)
+    {
+        if (cardVisual == null || cardVisual.cardImage == null)
+        {
+            Debug.LogWarning("无法应用shader：CardVisual或cardImage为空");
+            return;
+        }
+        
+        Image image = cardVisual.cardImage;
+        
+        // 参考ShaderCode.cs：创建新的Material实例
+        Material m = new Material(image.material);
+        image.material = m;
+        
+        // 参考ShaderCode.cs：禁用所有已启用的关键字
+        for (int i = 0; i < image.material.enabledKeywords.Length; i++)
+        {
+            image.material.DisableKeyword(image.material.enabledKeywords[i]);
+        }
+        
+        // 参考ShaderCode.cs：启用对应的shader关键字
+        string keywordName = "_EDITION_" + edition.ToString().ToUpper();
+        image.material.EnableKeyword(keywordName);
+        
+        Debug.Log($"已应用shader效果: {keywordName}");
     }
 
     /// <summary>

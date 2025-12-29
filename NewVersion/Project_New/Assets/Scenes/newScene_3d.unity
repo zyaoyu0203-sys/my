@@ -4532,6 +4532,9 @@ MonoBehaviour:
   cardFadeOutDuration: 0.3
   autoRefillCards: 1
   refillDelay: 0.1
+  enableSpecialDealMode: 1
+  goldCardsInSecondDeal: 1
+  blackCardsInSecondDeal: 1
   OnPlaySuccess:
     m_PersistentCalls:
       m_Calls: []

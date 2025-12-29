@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: 26
   cardType: 0
-  suit: 2
+  suit: 0
   rank: 9
   sprite: {fileID: 21300000, guid: a1d997abd0aab6d45b73ddeb628f3e06, type: 3}
+  shaderEdition: 0
   canBeDiscarded: 1
   canBePlayed: 1
   cardName: "\u6885\u82B19"

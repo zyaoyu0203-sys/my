@@ -25,6 +25,14 @@ public class CardManager : MonoBehaviour
     [Tooltip("自动补牌延迟时间（秒）")]
     [SerializeField] private float refillDelay = 0.3f;
 
+    [Header("Special Deal Mode")]
+    [Tooltip("启用特殊发牌模式：第一次发基础牌，第二次发金牌+黑牌，然后恢复正常")]
+    [SerializeField] private bool enableSpecialDealMode = false;
+    [Tooltip("第二次发牌的金牌数量（0-3）")]
+    [SerializeField] [Range(0, 3)] private int goldCardsInSecondDeal = 1;
+    [Tooltip("第二次发牌的黑牌数量（0-1）")]
+    [SerializeField] [Range(0, 1)] private int blackCardsInSecondDeal = 1;
+
     [Header("Play Events")]
     public UnityEvent OnPlaySuccess;              // 出牌成功
     public UnityEvent OnPlayFailed;               // 出牌失败（牌型不符合）
@@ -38,6 +46,9 @@ public class CardManager : MonoBehaviour
 
     [Header("Selection Events")]
     public UnityEvent<int> OnSelectionChanged;    // 选中数量变化
+
+    // 特殊发牌模式状态跟踪
+    private int dealCount = 0;  // 当前是第几次发牌
 
     private void Awake()
     {
@@ -364,17 +375,48 @@ public class CardManager : MonoBehaviour
     {
         // 查找HorizontalCardHolder
         HorizontalCardHolder cardHolder = FindObjectOfType<HorizontalCardHolder>();
-        
+
         if (cardHolder == null)
         {
             Debug.LogWarning("未找到HorizontalCardHolder，无法自动补牌");
             return;
         }
-        
+
         // 调用HorizontalCardHolder的发牌方法
         cardHolder.DealCards();
-        
+
         Debug.Log("已触发自动补牌");
+    }
+
+    // 特殊发牌模式相关的公开属性和方法
+    public bool EnableSpecialDealMode => enableSpecialDealMode;
+    public int DealCount => dealCount;
+    public int GoldCardsInSecondDeal => goldCardsInSecondDeal;
+    public int BlackCardsInSecondDeal => blackCardsInSecondDeal;
+
+    public void IncrementDealCount()
+    {
+        dealCount++;
+        Debug.Log($"发牌计数增加到: {dealCount}");
+    }
+
+    public void SetGoldCardsInSecondDeal(int count)
+    {
+        goldCardsInSecondDeal = Mathf.Clamp(count, 0, 3);
+    }
+
+    public void SetBlackCardsInSecondDeal(int count)
+    {
+        blackCardsInSecondDeal = Mathf.Clamp(count, 0, 1);
+    }
+
+    /// <summary>
+    /// 重置发牌计数（游戏重新开始时调用）
+    /// </summary>
+    public void ResetDealCount()
+    {
+        dealCount = 0;
+        Debug.Log("发牌计数已重置");
     }
 
 }
