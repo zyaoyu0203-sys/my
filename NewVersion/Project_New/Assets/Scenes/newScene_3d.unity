@@ -5613,6 +5613,7 @@ MonoBehaviour:
   friendCharacter: {fileID: 340630989}
   cameraShake: {fileID: 44545673}
   typeSpeed: 0.03
+  cardSystemInitDelay: 5
   yourColor: {r: 1, g: 1, b: 1, a: 1}
   bobbyColor: {r: 1, g: 0.26226407, b: 0.88754267, a: 1}
   hideObjects:
@@ -6353,7 +6354,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -91.35028, y: 39.714905}
+  m_AnchoredPosition: {x: -91.35022, y: 39.714844}
   m_SizeDelta: {x: -787.3005, y: -932.5698}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1934430852
@@ -7128,7 +7129,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9020383873027409205, guid: 01f6e38f79ebe8a428dc6c1d47a78018, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

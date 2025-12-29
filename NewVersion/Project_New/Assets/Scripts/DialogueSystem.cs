@@ -22,6 +22,10 @@ public class DialogueSystem : MonoBehaviour
     [Header("设置")]
     public float typeSpeed = 0.05f;
     
+    [Header("初始化延迟")]
+    [Tooltip("等待卡牌系统初始化的时间（秒）")]
+    public float cardSystemInitDelay = 1f;
+    
     [Header("颜色设置")]
     public Color yourColor = Color.white;
     public Color bobbyColor = new Color(0.5f, 1f, 1f);
@@ -46,6 +50,10 @@ public class DialogueSystem : MonoBehaviour
     private string fullText = "";
     private Coroutine typeCoroutine;
     
+    // 对话状态标志
+    private bool isDialogueActive = false;  // 对话是否正在进行中
+    private bool hasDialogueStarted = false; // 对话是否已经开始过
+    
     void Start()
     {
         CreateDialogues();
@@ -62,16 +70,43 @@ public class DialogueSystem : MonoBehaviour
         // 隐藏对话框
         dialoguePanel.SetActive(false);
         
-        // 隐藏其他UI
+        // 使用CanvasGroup隐藏其他UI（保持对象激活，避免干扰卡牌系统初始化）
         foreach(GameObject obj in hideObjects)
         {
             if(obj != null)
             {
-                obj.SetActive(false);
+                // 确保对象是激活的
+                obj.SetActive(true);
+                
+                // 使用CanvasGroup控制可见性和交互
+                CanvasGroup group = obj.GetComponent<CanvasGroup>();
+                if(group == null)
+                {
+                    group = obj.AddComponent<CanvasGroup>();
+                }
+                group.alpha = 0f;  // 完全透明
+                group.interactable = false;  // 不可交互
+                group.blocksRaycasts = false;  // 不阻挡射线
+                
+                Debug.Log($"已使用CanvasGroup隐藏UI: {obj.name}");
             }
         }
         
-        // 先播放睁眼动画，再开始对话
+        // 等待卡牌系统初始化完成后再开始对话
+        StartCoroutine(WaitForCardSystemThenStart());
+    }
+    
+    IEnumerator WaitForCardSystemThenStart()
+    {
+        // 等待一帧，确保所有Start方法都执行完毕
+        yield return null;
+        
+        // 再等待设定的时间，确保卡牌发放完成
+        yield return new WaitForSeconds(cardSystemInitDelay);
+        
+        Debug.Log($"等待{cardSystemInitDelay}秒后，卡牌系统初始化完成，开始播放睁眼动画和对话");
+        
+        // 开始睁眼动画和对话
         StartCoroutine(StartWithWakeUp());
     }
     
@@ -116,7 +151,8 @@ public class DialogueSystem : MonoBehaviour
     
     void Update()
     {
-        if(Input.GetMouseButtonDown(0))
+        // 只有在对话激活状态下才响应点击
+        if(isDialogueActive && Input.GetMouseButtonDown(0))
         {
             if(isTyping)
             {
@@ -149,7 +185,10 @@ public class DialogueSystem : MonoBehaviour
     void StartDialogue()
     {
         dialoguePanel.SetActive(true);
+        isDialogueActive = true;  // 标记对话已激活
+        hasDialogueStarted = true;
         currentLine = 0;
+        Debug.Log("对话开始，已激活对话输入响应");
         ShowLine();
     }
     
@@ -270,12 +309,14 @@ public class DialogueSystem : MonoBehaviour
     void EndDialogue()
     {
         dialoguePanel.SetActive(false);
+        isDialogueActive = false;  // 取消对话激活状态，停止响应点击输入
+        Debug.Log("对话结束！已停用对话输入响应");
         StartCoroutine(FadeInUI());
-        Debug.Log("对话结束！");
     }
     
     IEnumerator FadeInUI()
     {
+        // 确保所有对象已激活并准备CanvasGroup
         foreach(GameObject obj in hideObjects)
         {
             if(obj != null)
@@ -287,9 +328,13 @@ public class DialogueSystem : MonoBehaviour
                     group = obj.AddComponent<CanvasGroup>();
                 }
                 group.alpha = 0f;
+                // 暂时保持不可交互，直到淡入完成
+                group.interactable = false;
+                group.blocksRaycasts = false;
             }
         }
         
+        // 淡入动画
         float elapsed = 0f;
         while(elapsed < fadeInDuration)
         {
@@ -310,5 +355,22 @@ public class DialogueSystem : MonoBehaviour
             
             yield return null;
         }
+        
+        // 淡入完成后，恢复UI的完全可交互状态
+        foreach(GameObject obj in hideObjects)
+        {
+            if(obj != null)
+            {
+                CanvasGroup group = obj.GetComponent<CanvasGroup>();
+                if(group != null)
+                {
+                    group.alpha = 1f;
+                    group.interactable = true;  // 恢复交互
+                    group.blocksRaycasts = true;  // 恢复射线检测
+                }
+            }
+        }
+        
+        Debug.Log("UI淡入完成，已恢复交互性");
     }
 }
