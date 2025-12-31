@@ -153,42 +153,49 @@ public class CardManager : MonoBehaviour
         }
     }
 
-    public void AttemptDiscardCards()
+   public void AttemptDiscardCards()
+{
+    // 检查弃牌次数
+    if (DiscardCounter.Instance != null && !DiscardCounter.Instance.CanDiscard())
     {
-        List<Card> selected = GetSelectedCards();
-
-        if (selected.Count == 0)
-        {
-            Debug.Log("没有选中任何卡牌");
-            return;
-        }
-
-        selected = selected.Where(c => c != null && !c.IsEmpty()).ToList();
-
-        if (selected.Count == 0)
-        {
-            Debug.LogWarning("选中的卡牌都是空的");
-            return;
-        }
-
-        bool hasBlackCard = selected.Any(c => c.cardData.cardType == CardType.Black);
-        if (hasBlackCard)
-        {
-            Debug.Log("选中了黑牌，无法弃掉！");
-            OnBlackCardDiscardAttempt?.Invoke();
-            return;
-        }
-
-        bool allCanDiscard = selected.All(c => c.cardData.canBeDiscarded);
-        if (!allCanDiscard)
-        {
-            Debug.LogWarning("部分卡牌无法弃掉");
-            return;
-        }
-
-        Debug.Log($"弃掉 {selected.Count} 张卡牌");
-        StartCoroutine(DiscardCardsAnimation(selected));
+        Debug.Log("弃牌次数已用完！");
+        return;
     }
+    
+    List<Card> selected = GetSelectedCards();
+
+    if (selected.Count == 0)
+    {
+        Debug.Log("没有选中任何卡牌");
+        return;
+    }
+
+    selected = selected.Where(c => c != null && !c.IsEmpty()).ToList();
+
+    if (selected.Count == 0)
+    {
+        Debug.LogWarning("选中的卡牌都是空的");
+        return;
+    }
+
+    bool hasBlackCard = selected.Any(c => c.cardData.cardType == CardType.Black);
+    if (hasBlackCard)
+    {
+        Debug.Log("选中了黑牌，无法弃掉！");
+        OnBlackCardDiscardAttempt?.Invoke();
+        return;
+    }
+
+    bool allCanDiscard = selected.All(c => c.cardData.canBeDiscarded);
+    if (!allCanDiscard)
+    {
+        Debug.LogWarning("部分卡牌无法弃掉");
+        return;
+    }
+
+    Debug.Log($"弃掉 {selected.Count} 张卡牌");
+    StartCoroutine(DiscardCardsAnimation(selected));
+}
 
     private IEnumerator PlayCardsAnimation(List<Card> cards, bool isGoldWin)
     {
@@ -215,12 +222,19 @@ public class CardManager : MonoBehaviour
         if (isGoldWin)
         {
             OnGoldCardWin?.Invoke();
+            
+            // 触发金牌胜利流程
+            if (GoldCardVictoryManager.Instance != null)
+            {
+                GoldCardVictoryManager.Instance.TriggerVictory(cards);
+                yield break;
+            }
         }
         else
         {
             OnPlaySuccess?.Invoke();
         }
-
+        
         if (CardBurnEffect.Instance != null)
         {
             bool burnComplete = false;
@@ -286,6 +300,12 @@ public class CardManager : MonoBehaviour
         }
 
         OnDiscardSuccess?.Invoke();
+
+         // 减少弃牌次数
+        if (DiscardCounter.Instance != null)
+        {
+            DiscardCounter.Instance.UseDiscard();
+        }
 
         // === 使用CardDiscardEffect ===
         if (CardDiscardEffect.Instance != null)

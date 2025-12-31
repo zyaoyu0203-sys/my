@@ -1,4 +1,4 @@
-using UnityEngine;
+ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -51,8 +51,7 @@ public class DialogueSystem : MonoBehaviour
     private Coroutine typeCoroutine;
     
     // 对话状态标志
-    private bool isDialogueActive = false;  // 对话是否正在进行中
-    private bool hasDialogueStarted = false; // 对话是否已经开始过
+    private bool isDialogueActive = false;
     
     void Start()
     {
@@ -84,9 +83,9 @@ public class DialogueSystem : MonoBehaviour
                 {
                     group = obj.AddComponent<CanvasGroup>();
                 }
-                group.alpha = 0f;  // 完全透明
-                group.interactable = false;  // 不可交互
-                group.blocksRaycasts = false;  // 不阻挡射线
+                group.alpha = 0f;
+                group.interactable = false;
+                group.blocksRaycasts = false;
                 
                 Debug.Log($"已使用CanvasGroup隐藏UI: {obj.name}");
             }
@@ -149,6 +148,17 @@ public class DialogueSystem : MonoBehaviour
         dialogues.Add(new Dialogue { speaker = "You", text = "Poker cards...? Do I have to finish these games to..." });
     }
     
+    void CreateVictoryDialogues()
+    {
+        // 清空现有对话
+        dialogues.Clear();
+        
+        // 胜利对话（英文版）
+        dialogues.Add(new Dialogue { speaker = "Bobby", text = "Let's go, the graduation ceremony is starting!", shakeBobby = true });
+        dialogues.Add(new Dialogue { speaker = "You", text = "Wait... why can't I move?" });
+        dialogues.Add(new Dialogue { speaker = "You", text = "Bobby! Don't leave me!" });
+    }
+    
     void Update()
     {
         // 只有在对话激活状态下才响应点击
@@ -185,11 +195,28 @@ public class DialogueSystem : MonoBehaviour
     void StartDialogue()
     {
         dialoguePanel.SetActive(true);
-        isDialogueActive = true;  // 标记对话已激活
-        hasDialogueStarted = true;
+        isDialogueActive = true;
         currentLine = 0;
         Debug.Log("对话开始，已激活对话输入响应");
         ShowLine();
+    }
+    
+    public void StartVictoryDialogue()
+    {
+        // 创建胜利对话内容
+        CreateVictoryDialogues();
+        
+        // 显示对话框
+        dialoguePanel.SetActive(true);
+        isDialogueActive = true;
+        currentLine = 0;
+        Debug.Log("胜利对话开始");
+        ShowLine();
+    }
+    
+    public bool IsDialogueActive()
+    {
+        return isDialogueActive;
     }
     
     void ShowLine()
@@ -300,6 +327,40 @@ public class DialogueSystem : MonoBehaviour
         Debug.Log("最终透明度: " + friendMaterial.color.a);
     }
     
+    IEnumerator FadeOutFriend()
+    {
+        if(friendMaterial == null)
+        {
+            Debug.LogError("friendMaterial是空的！");
+            yield break;
+        }
+        
+        Debug.Log("=== 开始淡出Bobby ===");
+        
+        float duration = 1.5f;
+        float elapsed = 0f;
+        float startAlpha = friendMaterial.color.a;
+        
+        while(elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            float alpha = Mathf.Lerp(startAlpha, 0f, t);
+            
+            Color c = friendMaterial.color;
+            c.a = alpha;
+            friendMaterial.color = c;
+            
+            yield return null;
+        }
+        
+        Color finalColor = friendMaterial.color;
+        finalColor.a = 0f;
+        friendMaterial.color = finalColor;
+        
+        Debug.Log("=== Bobby淡出完成 ===");
+    }
+    
     void NextLine()
     {
         currentLine++;
@@ -309,9 +370,20 @@ public class DialogueSystem : MonoBehaviour
     void EndDialogue()
     {
         dialoguePanel.SetActive(false);
-        isDialogueActive = false;  // 取消对话激活状态，停止响应点击输入
+        isDialogueActive = false;
         Debug.Log("对话结束！已停用对话输入响应");
-        StartCoroutine(FadeInUI());
+        
+        // 如果当前对话是胜利对话（只有3句），让Bobby淡出
+        if(dialogues.Count == 3)
+        {
+            Debug.Log("胜利对话结束，Bobby淡出");
+            StartCoroutine(FadeOutFriend());
+        }
+        else
+        {
+            // 正常游戏开始对话，显示UI
+            StartCoroutine(FadeInUI());
+        }
     }
     
     IEnumerator FadeInUI()
@@ -365,8 +437,8 @@ public class DialogueSystem : MonoBehaviour
                 if(group != null)
                 {
                     group.alpha = 1f;
-                    group.interactable = true;  // 恢复交互
-                    group.blocksRaycasts = true;  // 恢复射线检测
+                    group.interactable = true;
+                    group.blocksRaycasts = true;
                 }
             }
         }
