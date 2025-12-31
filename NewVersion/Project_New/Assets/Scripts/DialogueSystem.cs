@@ -1,4 +1,4 @@
- using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -69,15 +69,13 @@ public class DialogueSystem : MonoBehaviour
         // 隐藏对话框
         dialoguePanel.SetActive(false);
         
-        // 使用CanvasGroup隐藏其他UI（保持对象激活，避免干扰卡牌系统初始化）
+        // 使用CanvasGroup隐藏其他UI
         foreach(GameObject obj in hideObjects)
         {
             if(obj != null)
             {
-                // 确保对象是激活的
                 obj.SetActive(true);
                 
-                // 使用CanvasGroup控制可见性和交互
                 CanvasGroup group = obj.GetComponent<CanvasGroup>();
                 if(group == null)
                 {
@@ -97,30 +95,20 @@ public class DialogueSystem : MonoBehaviour
     
     IEnumerator WaitForCardSystemThenStart()
     {
-        // 等待一帧，确保所有Start方法都执行完毕
         yield return null;
-        
-        // 再等待设定的时间，确保卡牌发放完成
         yield return new WaitForSeconds(cardSystemInitDelay);
-        
         Debug.Log($"等待{cardSystemInitDelay}秒后，卡牌系统初始化完成，开始播放睁眼动画和对话");
-        
-        // 开始睁眼动画和对话
         StartCoroutine(StartWithWakeUp());
     }
     
     IEnumerator StartWithWakeUp()
     {
-        // 播放睁眼+抬头动画
         if(cameraShake != null)
         {
             cameraShake.WakeUpSequence();
         }
         
-        // 等待动画完成
         yield return new WaitForSeconds(3.5f);
-        
-        // 开始对话
         StartDialogue();
     }
     
@@ -150,23 +138,19 @@ public class DialogueSystem : MonoBehaviour
     
     void CreateVictoryDialogues()
     {
-        // 清空现有对话
         dialogues.Clear();
-        
-        // 胜利对话（英文版）
         dialogues.Add(new Dialogue { speaker = "Bobby", text = "Let's go, the graduation ceremony is starting!", shakeBobby = true });
         dialogues.Add(new Dialogue { speaker = "You", text = "Wait... why can't I move?" });
         dialogues.Add(new Dialogue { speaker = "You", text = "Bobby! Don't leave me!" });
+        Debug.Log($"胜利对话已创建，共{dialogues.Count}句");
     }
     
     void Update()
     {
-        // 只有在对话激活状态下才响应点击
         if(isDialogueActive && Input.GetMouseButtonDown(0))
         {
             if(isTyping)
             {
-                // 只停止打字协程
                 if(typeCoroutine != null)
                 {
                     StopCoroutine(typeCoroutine);
@@ -181,7 +165,6 @@ public class DialogueSystem : MonoBehaviour
             }
         }
         
-        // 测试按键
         if(Input.GetKeyDown(KeyCode.T))
         {
             Debug.Log("测试摄像机抖动！");
@@ -189,6 +172,12 @@ public class DialogueSystem : MonoBehaviour
             {
                 cameraShake.Shake();
             }
+        }
+
+        // 调试按键
+        if(Input.GetKeyDown(KeyCode.D))
+        {
+            Debug.Log($"[DialogueSystem状态] isDialogueActive={isDialogueActive}, currentLine={currentLine}, totalLines={dialogues.Count}");
         }
     }
     
@@ -203,14 +192,13 @@ public class DialogueSystem : MonoBehaviour
     
     public void StartVictoryDialogue()
     {
-        // 创建胜利对话内容
+        Debug.Log("=== StartVictoryDialogue 被调用 ===");
         CreateVictoryDialogues();
         
-        // 显示对话框
         dialoguePanel.SetActive(true);
         isDialogueActive = true;
         currentLine = 0;
-        Debug.Log("胜利对话开始");
+        Debug.Log($"胜利对话开始，isDialogueActive={isDialogueActive}");
         ShowLine();
     }
     
@@ -221,8 +209,11 @@ public class DialogueSystem : MonoBehaviour
     
     void ShowLine()
     {
+        Debug.Log($"ShowLine: currentLine={currentLine}, totalLines={dialogues.Count}");
+
         if(currentLine >= dialogues.Count)
         {
+            Debug.Log("对话行数已达到总数，调用EndDialogue()");
             EndDialogue();
             return;
         }
@@ -296,7 +287,6 @@ public class DialogueSystem : MonoBehaviour
         }
         
         Debug.Log("=== 开始淡入Bobby ===");
-        Debug.Log("起始透明度: " + friendMaterial.color.a);
         
         float duration = 2f;
         float elapsed = 0f;
@@ -311,11 +301,6 @@ public class DialogueSystem : MonoBehaviour
             c.a = alpha;
             friendMaterial.color = c;
             
-            if(Mathf.FloorToInt(elapsed * 2) != Mathf.FloorToInt((elapsed - Time.deltaTime) * 2))
-            {
-                Debug.Log("淡入进度: " + Mathf.RoundToInt(t * 100) + "%, Alpha: " + alpha);
-            }
-            
             yield return null;
         }
         
@@ -323,8 +308,7 @@ public class DialogueSystem : MonoBehaviour
         finalColor.a = 1.0f;
         friendMaterial.color = finalColor;
         
-        Debug.Log("=== 淡入完成 ===");
-        Debug.Log("最终透明度: " + friendMaterial.color.a);
+        Debug.Log("=== Bobby淡入完成 ===");
     }
     
     IEnumerator FadeOutFriend()
@@ -364,31 +348,34 @@ public class DialogueSystem : MonoBehaviour
     void NextLine()
     {
         currentLine++;
+        Debug.Log($"NextLine: 移动到第{currentLine}行");
         ShowLine();
     }
     
     void EndDialogue()
     {
+        Debug.Log("=== EndDialogue 被调用 ===");
+        
         dialoguePanel.SetActive(false);
         isDialogueActive = false;
-        Debug.Log("对话结束！已停用对话输入响应");
         
-        // 如果当前对话是胜利对话（只有3句），让Bobby淡出
+        Debug.Log($"对话结束！isDialogueActive已设为false, dialogues.Count={dialogues.Count}");
+        
+        // 如果当前对话是胜利对话（只有3句）
         if(dialogues.Count == 3)
         {
-            Debug.Log("胜利对话结束，Bobby淡出");
+            Debug.Log("检测到胜利对话（3句），Bobby开始淡出");
             StartCoroutine(FadeOutFriend());
         }
         else
         {
-            // 正常游戏开始对话，显示UI
+            Debug.Log("正常游戏对话结束，UI开始淡入");
             StartCoroutine(FadeInUI());
         }
     }
     
     IEnumerator FadeInUI()
     {
-        // 确保所有对象已激活并准备CanvasGroup
         foreach(GameObject obj in hideObjects)
         {
             if(obj != null)
@@ -400,13 +387,11 @@ public class DialogueSystem : MonoBehaviour
                     group = obj.AddComponent<CanvasGroup>();
                 }
                 group.alpha = 0f;
-                // 暂时保持不可交互，直到淡入完成
                 group.interactable = false;
                 group.blocksRaycasts = false;
             }
         }
         
-        // 淡入动画
         float elapsed = 0f;
         while(elapsed < fadeInDuration)
         {
@@ -428,7 +413,6 @@ public class DialogueSystem : MonoBehaviour
             yield return null;
         }
         
-        // 淡入完成后，恢复UI的完全可交互状态
         foreach(GameObject obj in hideObjects)
         {
             if(obj != null)

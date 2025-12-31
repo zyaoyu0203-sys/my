@@ -1,10 +1,10 @@
-
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine.UI;
+using DG.Tweening;
 
 public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler, IPointerDownHandler
 {
@@ -15,8 +15,8 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private Vector3 offset;
 
     [Header("Card Data")]
-    public CardData cardData;                   // 卡牌数据引用
-    [SerializeField] private Image cardImage;   // 卡面图片组件（用于显示卡牌sprite）
+    public CardData cardData;
+    [SerializeField] private Image cardImage;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeedLimit = 50;
@@ -44,7 +44,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     [HideInInspector] public UnityEvent<Card> BeginDragEvent;
     [HideInInspector] public UnityEvent<Card> EndDragEvent;
     [HideInInspector] public UnityEvent<Card, bool> SelectEvent;
-    // Unity事件
 
     void Start()
     {
@@ -125,7 +124,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         isHovering = false;
     }
 
-
     public void OnPointerDown(PointerEventData eventData)
     {
         if (eventData.button != PointerEventData.InputButton.Left)
@@ -150,7 +148,7 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         if (wasDragged)
             return;
 
-        selected = !selected;// true->false
+        selected = !selected;
 
         SelectEvent.Invoke(this, selected);
 
@@ -159,7 +157,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         else
             transform.localPosition = Vector3.zero;
 
-        // 通知 CardManager 选中状态变化
         if (CardManager.Instance != null)
         {
             CardManager.Instance.RegisterCardSelection(this, selected);
@@ -171,23 +168,18 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         if (!selected)
             return;
 
-        // 保存之前的状态
         bool wasSelected = selected;
         selected = false;
 
-        // 重置位置
         transform.localPosition = Vector3.zero;
 
-        // 触发事件
         SelectEvent.Invoke(this, selected);
 
-        // 通知 CardManager
         if (CardManager.Instance != null)
         {
             CardManager.Instance.RegisterCardSelection(this, false);
         }
     }
-
 
     public int SiblingAmount()
     {
@@ -209,6 +201,36 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     /// </summary>
     public void SetCardData(CardData data)
     {
+        // === 第一步：强制重置所有视觉状态 ===
+        transform.localScale = Vector3.one;
+        transform.rotation = Quaternion.identity;
+        
+        // 杀掉所有DOTween动画
+        DOTween.Kill(transform);
+        if (cardVisual != null)
+        {
+            DOTween.Kill(cardVisual.transform);
+            if (cardVisual.cardImage != null)
+            {
+                DOTween.Kill(cardVisual.cardImage);
+            }
+        }
+        
+        // 重置cardVisual的Image颜色（最重要！）
+        if (cardVisual != null && cardVisual.cardImage != null)
+        {
+            cardVisual.cardImage.color = new Color(1f, 1f, 1f, 1f);  // 纯白，完全不透明
+            cardVisual.cardImage.enabled = true;
+        }
+        
+        // 重置Card自身的Image颜色
+        if (cardImage != null)
+        {
+            cardImage.color = new Color(1f, 1f, 1f, 1f);
+            cardImage.enabled = true;
+        }
+        
+        // === 第二步：设置新数据 ===
         cardData = data;
         
         // 更新CardVisual的图片（主要显示组件）
@@ -217,15 +239,13 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             cardVisual.cardImage.sprite = data.sprite;
             cardVisual.cardImage.enabled = true;
             
-            // 重置alpha为1（防止渐隐后残留透明状态）
-            Color color = cardVisual.cardImage.color;
-            color.a = 1f;
-            cardVisual.cardImage.color = color;
+            // 再次确保颜色正确
+            cardVisual.cardImage.color = new Color(1f, 1f, 1f, 1f);
             
             // 应用shader效果
             ApplyShaderEdition(data.shaderEdition);
             
-            Debug.Log($"CardVisual图片已更新: {data.cardName}，alpha重置为1，shader: {data.shaderEdition}");
+            Debug.Log($"CardVisual图片已更新: {data.cardName}，颜色已重置为白色，shader: {data.shaderEdition}");
         }
         else if (cardVisual == null)
         {
@@ -241,18 +261,14 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         {
             cardImage.sprite = data.sprite;
             cardImage.enabled = true;
-            
-            // 重置alpha为1
-            Color color = cardImage.color;
-            color.a = 1f;
-            cardImage.color = color;
+            cardImage.color = new Color(1f, 1f, 1f, 1f);
         }
 
         Debug.Log($"卡牌数据已设置: {(data != null ? data.cardName : "null")}");
     }
     
     /// <summary>
-    /// 应用shader效果到卡牌（参考ShaderCode.cs的实现）
+    /// 应用shader效果到卡牌
     /// </summary>
     private void ApplyShaderEdition(ShaderEdition edition)
     {
@@ -264,17 +280,14 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
         
         Image image = cardVisual.cardImage;
         
-        // 参考ShaderCode.cs：创建新的Material实例
         Material m = new Material(image.material);
         image.material = m;
         
-        // 参考ShaderCode.cs：禁用所有已启用的关键字
         for (int i = 0; i < image.material.enabledKeywords.Length; i++)
         {
             image.material.DisableKeyword(image.material.enabledKeywords[i]);
         }
         
-        // 参考ShaderCode.cs：启用对应的shader关键字
         string keywordName = "_EDITION_" + edition.ToString().ToUpper();
         image.material.EnableKeyword(keywordName);
         
@@ -293,13 +306,11 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
             cardImage.enabled = false;
         }
 
-        // 同时清空CardVisual的图片
         if (cardVisual != null && cardVisual.cardImage != null)
         {
             cardVisual.cardImage.enabled = false;
         }
 
-        // 取消选中状态
         if (selected)
         {
             Deselect();
@@ -319,6 +330,6 @@ public class Card : MonoBehaviour, IDragHandler, IBeginDragHandler, IEndDragHand
     private void OnDestroy()
     {
         if(cardVisual != null)
-        Destroy(cardVisual.gameObject);
+            Destroy(cardVisual.gameObject);
     }
 }

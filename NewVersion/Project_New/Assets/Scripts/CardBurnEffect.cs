@@ -43,6 +43,7 @@ public class CardBurnEffect : MonoBehaviour
             return;
         }
         Instance = this;
+        Debug.Log("CardBurnEffect初始化成功！");
     }
 
     /// <summary>
@@ -61,6 +62,8 @@ public class CardBurnEffect : MonoBehaviour
     /// </summary>
     private IEnumerator BurnCardsSequence(List<Card> cards, Vector3 center, System.Action onComplete)
     {
+        Debug.Log($"=== 开始燃烧序列，卡牌数量: {cards.Count} ===");
+
         // === 第1阶段：依次上升到并列位置 ===
         float totalWidth = (cards.Count - 1) * cardSpacing;
         float startX = center.x - totalWidth / 2f;
@@ -83,6 +86,8 @@ public class CardBurnEffect : MonoBehaviour
             yield return new WaitForSeconds(cardSequenceDelay);
         }
 
+        Debug.Log("所有卡牌移动完成，开始燃烧");
+
         // === 第2阶段：燃烧效果 ===
         foreach (var card in cards)
         {
@@ -95,6 +100,8 @@ public class CardBurnEffect : MonoBehaviour
         // 等待燃烧完成
         yield return new WaitForSeconds(burnDuration);
 
+        Debug.Log("燃烧完成，开始重置");
+
         // === 第3阶段：重置视觉状态 ===
         foreach (var card in cards)
         {
@@ -103,6 +110,8 @@ public class CardBurnEffect : MonoBehaviour
                 ResetCardVisuals(card);
             }
         }
+
+        Debug.Log("=== 燃烧序列完成 ===");
 
         // 完成回调
         onComplete?.Invoke();
@@ -113,12 +122,22 @@ public class CardBurnEffect : MonoBehaviour
     /// </summary>
     private IEnumerator BurnSingleCard(Card card)
     {
-        if (card == null || card.cardVisual == null) yield break;
+        if (card == null || card.cardVisual == null)
+        {
+            Debug.LogWarning("卡牌或cardVisual是null");
+            yield break;
+        }
 
         Transform cardTransform = card.transform;
         Image cardImage = card.cardVisual.cardImage;
 
-        if (cardImage == null) yield break;
+        if (cardImage == null)
+        {
+            Debug.LogWarning("cardImage是null");
+            yield break;
+        }
+
+        Debug.Log($"开始燃烧卡牌: {card.name}");
 
         Vector3 startPos = cardTransform.position;
         Vector3 originalScale = cardTransform.localScale;
@@ -175,23 +194,37 @@ public class CardBurnEffect : MonoBehaviour
 
         // 确保最终透明
         cardImage.color = new Color(1, 1, 0, 0);
+        Debug.Log($"卡牌 {card.name} 燃烧完成");
     }
 
     /// <summary>
-    /// 重置卡牌视觉状态
+    /// 重置卡牌视觉状态（彻底版本）
     /// </summary>
     private void ResetCardVisuals(Card card)
     {
         if (card == null) return;
 
+        Debug.Log($"重置卡牌视觉: {card.name}");
+
+        // 杀掉所有DOTween动画
+        DOTween.Kill(card.transform);
+        if (card.cardVisual != null)
+        {
+            DOTween.Kill(card.cardVisual.transform);
+            if (card.cardVisual.cardImage != null)
+            {
+                DOTween.Kill(card.cardVisual.cardImage);
+            }
+        }
+
         // 重置Transform
         card.transform.localScale = Vector3.one;
         card.transform.rotation = Quaternion.identity;
 
-        // 重置Image颜色
+        // 重置cardVisual的Image颜色为纯白且完全不透明
         if (card.cardVisual != null && card.cardVisual.cardImage != null)
         {
-            card.cardVisual.cardImage.color = Color.white;
+            card.cardVisual.cardImage.color = new Color(1f, 1f, 1f, 1f);
         }
     }
 }

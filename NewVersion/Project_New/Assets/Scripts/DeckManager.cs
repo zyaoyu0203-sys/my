@@ -122,6 +122,111 @@ public class DeckManager : MonoBehaviour
     }
 
     /// <summary>
+    /// 把卡牌放回牌堆（用于重抽）
+    /// </summary>
+    public void ReturnCardToDeck(CardData card)
+    {
+        if (card == null)
+            return;
+
+        // 从所有列表中移除
+        inHand.Remove(card);
+        playedCards.Remove(card);
+        discardedCards.Remove(card);
+
+        // 放回牌堆（如果不存在的话）
+        if (!deckPool.Contains(card))
+        {
+            deckPool.Add(card);
+            Debug.Log($"卡牌 {card.cardName} 已放回牌堆");
+        }
+    }
+
+    /// <summary>
+    /// 从牌堆中永久删除一张特定的卡（根据卡牌名称）
+    /// </summary>
+    public bool RemoveCardFromDeck(string cardName)
+    {
+        // 从牌堆中查找并删除
+        CardData cardToRemove = deckPool.Find(c => c.cardName == cardName);
+        if (cardToRemove != null)
+        {
+            deckPool.Remove(cardToRemove);
+            Debug.Log($"从牌堆删除: {cardName}");
+            return true;
+        }
+        
+        // 从手牌中查找并删除
+        cardToRemove = inHand.Find(c => c.cardName == cardName);
+        if (cardToRemove != null)
+        {
+            inHand.Remove(cardToRemove);
+            Debug.Log($"从手牌删除: {cardName}");
+            return true;
+        }
+        
+        // 从已打出牌堆中查找并删除
+        cardToRemove = playedCards.Find(c => c.cardName == cardName);
+        if (cardToRemove != null)
+        {
+            playedCards.Remove(cardToRemove);
+            Debug.Log($"从已打出牌堆删除: {cardName}");
+            return true;
+        }
+        
+        // 从已弃牌堆中查找并删除
+        cardToRemove = discardedCards.Find(c => c.cardName == cardName);
+        if (cardToRemove != null)
+        {
+            discardedCards.Remove(cardToRemove);
+            Debug.Log($"从已弃牌堆删除: {cardName}");
+            return true;
+        }
+        
+        Debug.LogWarning($"未找到卡牌: {cardName}");
+        return false;
+    }
+
+    /// <summary>
+    /// 从牌堆中永久删除特定类型的所有卡
+    /// </summary>
+    public int RemoveCardsByType(CardType type)
+    {
+        int count = 0;
+        
+        // 从牌堆删除
+        count += deckPool.RemoveAll(c => c.cardType == type);
+        
+        // 从手牌删除
+        count += inHand.RemoveAll(c => c.cardType == type);
+        
+        // 从已打出牌堆删除
+        count += playedCards.RemoveAll(c => c.cardType == type);
+        
+        // 从已弃牌堆删除
+        count += discardedCards.RemoveAll(c => c.cardType == type);
+        
+        Debug.Log($"删除了 {count} 张 {type} 类型的卡牌");
+        return count;
+    }
+
+    /// <summary>
+    /// 获取所有卡牌名称（去重）
+    /// </summary>
+    public List<string> GetAllCardNames()
+    {
+        List<string> names = new List<string>();
+        
+        foreach (var card in allCardsDatabase)
+        {
+            if (card != null && !names.Contains(card.cardName))
+                names.Add(card.cardName);
+        }
+        
+        return names;
+    }
+
+    /// <summary>
     /// 获取牌堆剩余数量
     /// </summary>
     public int GetDeckCount() => deckPool.Count;

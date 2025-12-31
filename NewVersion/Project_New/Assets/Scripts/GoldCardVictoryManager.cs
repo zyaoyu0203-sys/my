@@ -10,15 +10,9 @@ public class GoldCardVictoryManager : MonoBehaviour
 {
     public static GoldCardVictoryManager Instance { get; private set; }
 
-    [Header("Victory Animation")]
-    public float cardScaleUp = 2f;
-    public float cardMoveTime = 1f;
-    public float cardScaleTime = 0.8f;
-    public float glowDuration = 1.5f;
-
     [Header("Level Clear UI")]
     public TextMeshProUGUI levelClearText;
-    public Image levelClearFlash;  // 新增：背景闪光
+    public Image levelClearFlash;
     public float levelClearFontSize = 120f;
     public Color levelClearColor = Color.yellow;
     public float levelClearDisplayTime = 2f;
@@ -30,9 +24,19 @@ public class GoldCardVictoryManager : MonoBehaviour
     public float dialogueDelay = 1f;
     public DialogueSystem dialogueSystem;
 
+    [Header("Item Choice")]
+    public GameObject itemChoicePanel;
+    public Image item1Image;
+    public Image item2Image;
+    public Button item1Button;
+    public Button item2Button;
+    public Sprite item1Sprite;
+    public Sprite item2Sprite;
+    public float itemFadeDuration = 0.5f;
+
     [Header("Scene Transition")]
     public string nextSceneName = "TestScene";
-    public float sceneTransitionDelay = 2f;
+    public float sceneTransitionDelay = 1f;
     public bool autoTransition = true;
 
     [Header("Fade Effect")]
@@ -40,6 +44,7 @@ public class GoldCardVictoryManager : MonoBehaviour
     public float fadeDuration = 1f;
 
     private bool isVictoryTriggered = false;
+    private int selectedItemIndex = -1;
 
     private void Awake()
     {
@@ -63,6 +68,32 @@ public class GoldCardVictoryManager : MonoBehaviour
             fadeCanvasGroup.alpha = 0f;
             fadeCanvasGroup.gameObject.SetActive(false);
         }
+
+        if (itemChoicePanel != null)
+        {
+            itemChoicePanel.SetActive(false);
+        }
+
+        // 绑定按钮事件
+        if (item1Button != null)
+        {
+            item1Button.onClick.AddListener(() => OnItemSelected(0));
+            Debug.Log("Item1Button事件已绑定");
+        }
+        else
+        {
+            Debug.LogWarning("Item1Button未设置！");
+        }
+
+        if (item2Button != null)
+        {
+            item2Button.onClick.AddListener(() => OnItemSelected(1));
+            Debug.Log("Item2Button事件已绑定");
+        }
+        else
+        {
+            Debug.LogWarning("Item2Button未设置！");
+        }
         
         Debug.Log("GoldCardVictoryManager已启动！按V键测试胜利流程");
     }
@@ -71,55 +102,8 @@ public class GoldCardVictoryManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.V))
         {
-            Debug.Log("测试：手动触发胜利流程");
-            TestVictory();
-        }
-    }
-
-    private void TestVictory()
-    {
-        List<Card> testCards = new List<Card>();
-        Card[] allCards = FindObjectsOfType<Card>();
-        
-        for (int i = 0; i < Mathf.Min(3, allCards.Length); i++)
-        {
-            if (allCards[i] != null)
-            {
-                testCards.Add(allCards[i]);
-            }
-        }
-        
-        if (testCards.Count == 0)
-        {
-            Debug.Log("场景中没有卡牌，跳过动画测试");
-            StartCoroutine(TestVictoryWithoutCards());
-        }
-        else
-        {
-            Debug.Log($"找到 {testCards.Count} 张卡牌，开始测试");
-            TriggerVictory(testCards);
-        }
-    }
-
-    private IEnumerator TestVictoryWithoutCards()
-    {
-        HideUIObjects();
-        yield return StartCoroutine(ShowLevelClear());
-        yield return new WaitForSeconds(dialogueDelay);
-        
-        if (dialogueSystem != null)
-        {
-            dialogueSystem.StartVictoryDialogue();
-            while (dialogueSystem.IsDialogueActive())
-            {
-                yield return null;
-            }
-        }
-        
-        if (autoTransition)
-        {
-            yield return new WaitForSeconds(sceneTransitionDelay);
-            TransitionToNextScene();
+            Debug.Log("=== 按下V键，测试胜利流程 ===");
+            TriggerVictory(new List<Card>());
         }
     }
 
@@ -133,32 +117,68 @@ public class GoldCardVictoryManager : MonoBehaviour
 
         isVictoryTriggered = true;
         Debug.Log("=== 金牌胜利流程开始 ===");
-        StartCoroutine(VictorySequence(goldCards));
+        StartCoroutine(VictorySequence());
     }
 
-    private IEnumerator VictorySequence(List<Card> goldCards)
+    private IEnumerator VictorySequence()
     {
-        yield return StartCoroutine(GoldCardAnimation(goldCards));
+        // 1. 隐藏UI
+        Debug.Log("【步骤1】隐藏UI");
         HideUIObjects();
-        yield return StartCoroutine(ShowLevelClear());
-        yield return new WaitForSeconds(dialogueDelay);
 
+        // 2. 显示Level Clear
+        Debug.Log("【步骤2】显示Level Clear");
+        yield return StartCoroutine(ShowLevelClear());
+        Debug.Log("【步骤2】Level Clear显示完成");
+
+        // 3. 等待
+        Debug.Log($"【步骤3】等待 {dialogueDelay} 秒");
+        yield return new WaitForSeconds(dialogueDelay);
+        Debug.Log("【步骤3】等待完成");
+
+        // 4. 触发胜利对话
+        Debug.Log("【步骤4】开始触发胜利对话");
         if (dialogueSystem != null)
         {
+            Debug.Log("DialogueSystem存在，调用StartVictoryDialogue()");
             dialogueSystem.StartVictoryDialogue();
             
+            Debug.Log("等待对话结束...");
+            int waitCount = 0;
             while (dialogueSystem.IsDialogueActive())
             {
+                waitCount++;
+                if (waitCount % 60 == 0) // 每60帧（约1秒）输出一次
+                {
+                    Debug.Log($"仍在等待对话结束... (等待了约{waitCount/60}秒)");
+                }
                 yield return null;
             }
+            Debug.Log("【步骤4】对话已结束！");
         }
         else
         {
-            Debug.LogWarning("DialogueSystem未设置");
+            Debug.LogError("DialogueSystem未设置！跳过对话");
         }
 
+        // 5. 显示道具选择界面
+        Debug.Log("【步骤5】显示道具选择界面");
+        yield return StartCoroutine(ShowItemChoice());
+        Debug.Log("【步骤5】道具界面显示完成");
+
+        // 6. 等待玩家选择
+        Debug.Log("【步骤6】等待玩家选择道具...");
+        while (selectedItemIndex == -1)
+        {
+            yield return null;
+        }
+
+        Debug.Log($"【步骤6】玩家选择了道具 {selectedItemIndex}");
+
+        // 7. 场景切换
         if (autoTransition)
         {
+            Debug.Log($"【步骤7】等待 {sceneTransitionDelay} 秒后切换场景");
             yield return new WaitForSeconds(sceneTransitionDelay);
             TransitionToNextScene();
         }
@@ -166,66 +186,124 @@ public class GoldCardVictoryManager : MonoBehaviour
         Debug.Log("=== 金牌胜利流程结束 ===");
     }
 
-    private IEnumerator GoldCardAnimation(List<Card> goldCards)
+    private IEnumerator ShowItemChoice()
     {
-        Vector3 screenCenter = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width / 2, Screen.height / 2, 10));
+        Debug.Log(">>> ShowItemChoice 开始");
 
-        float spacing = 2f;
-        float totalWidth = (goldCards.Count - 1) * spacing;
-        float startX = screenCenter.x - totalWidth / 2f;
-
-        for (int i = 0; i < goldCards.Count; i++)
+        if (itemChoicePanel == null)
         {
-            Card card = goldCards[i];
-            if (card == null) continue;
-
-            Vector3 targetPos = new Vector3(startX + i * spacing, screenCenter.y, screenCenter.z);
-            card.transform.DOMove(targetPos, cardMoveTime).SetEase(Ease.OutQuad);
-            yield return new WaitForSeconds(0.2f);
+            Debug.LogError("ItemChoicePanel是null！自动选择第一个道具");
+            selectedItemIndex = 0;
+            yield break;
         }
 
-        yield return new WaitForSeconds(0.3f);
+        Debug.Log($"ItemChoicePanel: {itemChoicePanel.name}");
 
-        foreach (var card in goldCards)
+        // 设置道具图片
+        if (item1Image != null && item1Sprite != null)
         {
-            if (card != null)
-            {
-                card.transform.DOScale(Vector3.one * cardScaleUp, cardScaleTime).SetEase(Ease.OutBack);
-            }
+            item1Image.sprite = item1Sprite;
+            item1Image.color = new Color(1, 1, 1, 0);
+            Debug.Log("Item1图片已设置为透明");
+        }
+        else
+        {
+            Debug.LogWarning($"Item1设置失败 - Image: {item1Image != null}, Sprite: {item1Sprite != null}");
         }
 
-        yield return new WaitForSeconds(cardScaleTime);
-        yield return StartCoroutine(FlashEffect(goldCards));
+        if (item2Image != null && item2Sprite != null)
+        {
+            item2Image.sprite = item2Sprite;
+            item2Image.color = new Color(1, 1, 1, 0);
+            Debug.Log("Item2图片已设置为透明");
+        }
+        else
+        {
+            Debug.LogWarning($"Item2设置失败 - Image: {item2Image != null}, Sprite: {item2Sprite != null}");
+        }
+
+        // 显示面板
+        itemChoicePanel.SetActive(true);
+        Debug.Log("ItemChoicePanel已激活");
+
+        // 道具淡入
+        if (item1Image != null)
+        {
+            Debug.Log($"Item1开始淡入 (持续{itemFadeDuration}秒)");
+            item1Image.DOFade(1f, itemFadeDuration).SetEase(Ease.OutQuad);
+        }
+
+        if (item2Image != null)
+        {
+            Debug.Log($"Item2开始淡入 (持续{itemFadeDuration}秒)");
+            item2Image.DOFade(1f, itemFadeDuration).SetEase(Ease.OutQuad);
+        }
+
+        yield return new WaitForSeconds(itemFadeDuration);
+        Debug.Log(">>> ShowItemChoice 完成，道具已完全显示");
     }
 
-    private IEnumerator FlashEffect(List<Card> goldCards)
+    private void OnItemSelected(int index)
     {
-        foreach (var card in goldCards)
+        Debug.Log($"!!! OnItemSelected 被调用: index={index}");
+
+        if (selectedItemIndex != -1)
         {
-            if (card != null && card.cardVisual != null && card.cardVisual.cardImage != null)
-            {
-                StartCoroutine(PulseCard(card));
-            }
+            Debug.LogWarning("已经选择过道具，忽略重复点击");
+            return;
         }
 
-        yield return new WaitForSeconds(glowDuration);
+        selectedItemIndex = index;
+        Debug.Log($"选择了道具 {index}，开始播放选择动画");
+
+        StartCoroutine(ItemSelectedAnimation(index));
     }
 
-    private IEnumerator PulseCard(Card card)
+    private IEnumerator ItemSelectedAnimation(int selectedIndex)
     {
-        Image cardImage = card.cardVisual.cardImage;
-        Color originalColor = cardImage.color;
+        Debug.Log($">>> ItemSelectedAnimation 开始 (选择了道具{selectedIndex})");
+
+        // 禁用按钮
+        if (item1Button != null) item1Button.interactable = false;
+        if (item2Button != null) item2Button.interactable = false;
+        Debug.Log("按钮已禁用");
+
+        // 未选择的道具淡出
+        Image unselectedImage = selectedIndex == 0 ? item2Image : item1Image;
         
-        float elapsed = 0f;
-        while (elapsed < glowDuration)
+        if (unselectedImage != null)
         {
-            elapsed += Time.deltaTime;
-            float t = Mathf.PingPong(elapsed * 3f, 1f);
-            cardImage.color = Color.Lerp(originalColor, Color.white, t);
-            yield return null;
+            Debug.Log($"未选择的道具开始淡出 (持续{itemFadeDuration}秒)");
+            unselectedImage.DOFade(0f, itemFadeDuration).SetEase(Ease.InQuad);
         }
-        
-        cardImage.color = originalColor;
+
+        // 面板背景淡出
+        Image panelBg = itemChoicePanel.GetComponent<Image>();
+        if (panelBg != null)
+        {
+            Debug.Log("面板背景开始淡出");
+            panelBg.DOFade(0f, itemFadeDuration).SetEase(Ease.InQuad);
+        }
+
+        yield return new WaitForSeconds(itemFadeDuration);
+        Debug.Log("未选择道具和背景淡出完成");
+
+        // 选中的道具也淡出
+        Image selectedImage = selectedIndex == 0 ? item1Image : item2Image;
+        if (selectedImage != null)
+        {
+            Debug.Log($"选中的道具开始淡出 (持续{itemFadeDuration}秒)");
+            selectedImage.DOFade(0f, itemFadeDuration).SetEase(Ease.InQuad);
+        }
+
+        yield return new WaitForSeconds(itemFadeDuration);
+        Debug.Log("选中道具淡出完成");
+
+        // 隐藏面板
+        itemChoicePanel.SetActive(false);
+        Debug.Log("ItemChoicePanel已隐藏");
+
+        Debug.Log(">>> ItemSelectedAnimation 完成");
     }
 
     private IEnumerator ShowLevelClear()
@@ -236,11 +314,10 @@ public class GoldCardVictoryManager : MonoBehaviour
             yield break;
         }
 
-        // === 获取RectTransform和保存初始位置 ===
         RectTransform rectTransform = levelClearText.rectTransform;
         Vector2 originalAnchoredPos = rectTransform.anchoredPosition;
 
-        // === 背景闪光效果 ===
+        // 背景闪光效果
         if (levelClearFlash != null)
         {
             levelClearFlash.gameObject.SetActive(true);
@@ -259,29 +336,20 @@ public class GoldCardVictoryManager : MonoBehaviour
         levelClearText.color = levelClearColor;
         levelClearText.alpha = 0;
 
-        // === 重置到初始状态 ===
         rectTransform.anchoredPosition = originalAnchoredPos;
         rectTransform.localRotation = Quaternion.identity;
         rectTransform.localScale = Vector3.zero;
         
         Sequence seq = DOTween.Sequence();
-        
-        // 淡入
         seq.Append(levelClearText.DOFade(1f, 0.3f).SetEase(Ease.OutQuad));
-        
-        // 弹性放大
         seq.Join(rectTransform.DOScale(Vector3.one * 1.2f, 0.5f).SetEase(Ease.OutBack));
-        
-        // 颜色闪烁
         seq.Append(levelClearText.DOColor(Color.white, 0.15f).SetEase(Ease.InOutQuad));
         seq.Append(levelClearText.DOColor(levelClearColor, 0.15f).SetEase(Ease.InOutQuad));
         seq.Append(levelClearText.DOColor(Color.white, 0.15f).SetEase(Ease.InOutQuad));
         seq.Append(levelClearText.DOColor(levelClearColor, 0.15f).SetEase(Ease.InOutQuad));
         
-        // 轻微旋转
         rectTransform.DOLocalRotate(new Vector3(0, 0, 5), 0.5f).SetEase(Ease.InOutSine).SetLoops(2, LoopType.Yoyo);
         
-        // 摄像机抖动
         if (dialogueSystem != null && dialogueSystem.cameraShake != null)
         {
             dialogueSystem.cameraShake.Shake();
@@ -289,10 +357,8 @@ public class GoldCardVictoryManager : MonoBehaviour
 
         yield return new WaitForSeconds(levelClearDisplayTime);
 
-        // === 消失动画：向上飘+淡出 ===
         Sequence outSeq = DOTween.Sequence();
         outSeq.Append(levelClearText.DOFade(0f, 0.5f).SetEase(Ease.InQuad));
-        outSeq.Join(rectTransform.DOAnchorPosY(originalAnchoredPos.y + 100f, 0.5f).SetEase(Ease.InQuad));
         outSeq.Join(rectTransform.DOScale(Vector3.one * 1.5f, 0.5f).SetEase(Ease.InQuad));
         
         if (levelClearFlash != null)
@@ -304,7 +370,6 @@ public class GoldCardVictoryManager : MonoBehaviour
         
         levelClearText.gameObject.SetActive(false);
         
-        // === 完全重置 ===
         rectTransform.anchoredPosition = originalAnchoredPos;
         rectTransform.localRotation = Quaternion.identity;
         rectTransform.localScale = Vector3.one;
@@ -335,7 +400,7 @@ public class GoldCardVictoryManager : MonoBehaviour
 
     private IEnumerator FadeAndLoadScene()
     {
-        Debug.Log("开始淡出...");
+        Debug.Log("开始淡出到黑屏...");
         
         if (fadeCanvasGroup != null)
         {
@@ -350,9 +415,15 @@ public class GoldCardVictoryManager : MonoBehaviour
             }
             
             fadeCanvasGroup.alpha = 1f;
+            Debug.Log("黑屏淡出完成");
         }
         
         Debug.Log($"正在切换到场景: {nextSceneName}");
         SceneManager.LoadScene(nextSceneName);
+    }
+
+    public int GetSelectedItem()
+    {
+        return selectedItemIndex;
     }
 }
